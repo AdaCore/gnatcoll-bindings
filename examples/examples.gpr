@@ -1,9 +1,0 @@
-with "gnatcoll_python";
-project Examples is
-   for Object_Dir use "obj";
-   for Exec_Dir use ".";
-   for Main use ("newclass.adb");
-   for Source_Files use ("common.ads",      "common.adb",
-                         "textconsole.ads", "textconsole.adb",
-                         "newclass.adb");
-end Examples;
