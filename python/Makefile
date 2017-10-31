@@ -38,6 +38,8 @@
 #   BUILD         : DEBUG PROD
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   TARGET        : target triplet for cross-compilation
+#   INTEGRATED    : installs the project as part of the compiler installation;
+#                   this adds NORMALIZED_TARGET subdir to prefix
 
 # helper programs
 CAT := cat
@@ -58,8 +60,11 @@ else
   MAKEPREFIX=$(SOURCE_DIR)/
 endif
 
-HOST   := $(shell gcc -dumpmachine)
 TARGET := $(shell gcc -dumpmachine)
+NORMALIZED_TARGET := $(subst normalized_target:,,$(wordlist 6,6,$(shell gprconfig  --config=ada --target=$(TARGET) --mi-show-compilers)))
+ifeq ($(NORMALIZED_TARGET),)
+  $(error No toolchain found for target "$(TARGET)")
+endif
 
 prefix := $(dir $(shell $(WHICH) gnatls))..
 GNATCOLL_VERSION := $(shell $(CAT) ../version_information)
@@ -68,23 +73,23 @@ BUILD         = PROD
 PROCESSORS    = 0
 BUILD_DIR     =
 ENABLE_SHARED := yes
+INTEGRATED    = no
 
 all: build
 
 # Load current setup if any
 -include makefile.setup
 
-# target options for cross-build
-ifeq ($(HOST),$(TARGET))
-  GTARGET=
-else
-  GTARGET=--target=$(TARGET)
-endif
+GTARGET=--target=$(NORMALIZED_TARGET)
 
 ifeq ($(ENABLE_SHARED), yes)
    LIBRARY_TYPES=static relocatable static-pic
 else
    LIBRARY_TYPES=static
+endif
+
+ifeq ($(INTEGRATED), yes)
+   integrated_install=/$(NORMALIZED_TARGET)
 endif
 
 GPR_VARS= \
@@ -97,7 +102,7 @@ GPRBUILD_OPTIONS=
 BUILDER=gprbuild -p -m $(GTARGET) $(RBD) -j$(PROCESSORS) $(GPR_VARS) \
 	$(GPRBUILD_OPTIONS)
 INSTALLER=gprinstall -p -f --target=$(TARGET) $(GPR_VARS) \
-	$(RBD) --sources-subdir=include/$(NAME) --prefix=$(prefix)
+	$(RBD) --sources-subdir=include/$(NAME) --prefix=$(prefix)$(integrated_install)
 CLEANER=gprclean -q $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --install-name=$(NAME) --uninstall
 
@@ -143,6 +148,7 @@ clean-%:
 setup:
 	$(ECHO) "prefix=$(prefix)" > makefile.setup
 	$(ECHO) "ENABLE_SHARED=$(ENABLE_SHARED)" >> makefile.setup
+	$(ECHO) "INTEGRATED=$(INTEGRATED)" >> makefile.setup
 	$(ECHO) "BUILD=$(BUILD)" >> makefile.setup
 	$(ECHO) "PROCESSORS=$(PROCESSORS)" >> makefile.setup
 	$(ECHO) "TARGET=$(TARGET)" >> makefile.setup

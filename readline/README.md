@@ -45,6 +45,12 @@ General:
 
    SOURCE_DIR : for out-of-tree build
 
+   INTEGRATED : treat prefix as compiler installation (yes/no)
+                this is so that installed gnatcoll project can later be
+                referenced as predefined project of this compiler;
+                this adds a normalized target subdir to prefix
+                default is "no"
+
 Module-specific:
 
    ACCEPT_GPL       : indicates your acceptance of GPL (yes/no)

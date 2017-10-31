@@ -33,6 +33,12 @@ General:
 
    SOURCE_DIR : for out-of-tree build
 
+   INTEGRATED : treat prefix as compiler installation (yes/no)
+                this is so that installed gnatcoll project can later be
+                referenced as predefined project of this compiler;
+                this adds a normalized target subdir to prefix
+                default is "no"
+
 Module-specific:
 
    Please refer to individual components.
@@ -47,7 +53,7 @@ Building
 The components of GNATCOLL Bindings Module are built using standalone GPR
 project files, to build each of them is as simple as:
 
-$ gprbuild gnatcoll-<component>.gpr
+$ gprbuild <component>/gnatcoll-<component>.gpr
 
 However, to build all versions of the library (static, relocatable and
 static-pic) it is simpler to use the provided Makefiles:
