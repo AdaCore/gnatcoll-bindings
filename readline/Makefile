@@ -72,7 +72,7 @@ ifeq ($(NORMALIZED_TARGET),)
 endif
 
 prefix := $(dir $(shell $(WHICH) gnatls))..
-GNATCOLL_VERSION := $(shell $(CAT) ../version_information)
+GNATCOLL_VERSION := $(shell $(CAT) $(SOURCE_DIR)/../version_information)
 
 ACCEPT_GPL    = no
 BUILD         = PROD
