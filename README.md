@@ -1,8 +1,8 @@
 The GNAT Components Collection (GNATCOLL) - Bindings
 ====================================================
 
-This is the Bindings module of the GNAT Components Collection. Please refer to
-individual components for more details.
+This is the Bindings module of the **GNAT Components Collection**. Please
+refer to individual components for more details.
 
 Dependencies
 ------------
@@ -14,56 +14,57 @@ available on your system:
 - gnatcoll-core
 - As well as relevant third-party libraries you need to build bindings for.
 
-Configuring the build process
------------------------------
-
-The following variables can be used to configure the build process:
-
-General:
-
-   prefix     : location of the installation, the default is the running
-                GNAT installation root.
-
-   BUILD      : control the build options : PROD (default) or DEBUG
-
-   PROCESSORS : parallel compilation (default is 0, which uses all available
-                cores)
-
-   TARGET     : for cross-compilation, auto-detected for native platforms
-
-   SOURCE_DIR : for out-of-tree build
-
-   INTEGRATED : treat prefix as compiler installation (yes/no)
-                this is so that installed gnatcoll project can later be
-                referenced as predefined project of this compiler;
-                this adds a normalized target subdir to prefix
-                default is "no"
-
-Module-specific:
-
-   Please refer to individual components.
-
-To use the default options:
-
-   $ make setup
-
 Building
 --------
 
-The components of GNATCOLL Bindings Module are built using standalone GPR
-project files, to build each of them is as simple as:
+The components of **GNATCOLL** Bindings Module are built using standalone GPR
+project files. To build each of them you can simply do:
 
-$ gprbuild <component>/gnatcoll-<component>.gpr
+```
+  $ gprbuild -P <component>/gnatcoll-<component>.gpr
+```
 
-However, to build all versions of the library (static, relocatable and
-static-pic) it is simpler to use the provided Makefiles:
+However, this method has several limitations:
 
-$ make -C <component>
+- it builds one version of the library (static, relocatable and static-pic)
+  at a time
+- it might depend on the environment (`C_INCLUDE_PATH`, `LIBRARY_PATH`, ...)
 
-Then, to install it:
+In order to simplify that process, each component contains a **Python** script
+called `setup.py`. Each script provides the following subcommands: `build`,
+`install`, `clean`, `uninstall`.
 
-$ make -C <component> install
+On the first call to `build`, the user can setup some preferences. You can do
+`setup.py build --help` to get the list of available options for each
+module. After first call previous preferences will be reused unless you
+use the `--reconfigure` switch.
 
+Note that you can perform an out-of-source-tree build by just invoking
+`setup.py` from another directory.
+
+Installing
+----------
+
+In order to install a given component, either call `gprinstall` or use
+`setup.py` script:
+
+```
+  $ setup.py install --prefix=some_path
+```
+
+Note that if ``--prefix`` is not used, then projects will be installed
+into the location of the used compiler.
+
+Bindings
+--------
+
+The following bindings are provided:
+
+- [gmp](gmp/README.md)
+- [iconv](iconv/README.md)
+- [python](python/README.md)
+- [readline](readline/README.md)
+- [syslog](syslog/README.md)
 
 Bug reports
 -----------

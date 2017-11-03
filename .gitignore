@@ -24,6 +24,7 @@ lib/
 *.o
 *.deps
 *.pyc
+setup.json
 /gnat_src
 
 examples/library/obj
