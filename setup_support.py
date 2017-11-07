@@ -192,8 +192,8 @@ class Config(object):
 
         cmd = list(args)
 
-        if sys.platform in ('win32', 'cygwin'):
-            cmd[0] += '.exe'
+        cmd[0] = which(cmd[0])
+        assert cmd[0], "cannot find program: %s" % args[0]
 
         if grab:
             output = check_output(cmd).strip()
