@@ -145,20 +145,38 @@ class Config(object):
 
     def gprcmd(self, cmd, project, *args, **kwargs):
         cmd = list(cmd) + list(args)
+
+        # Handle out of source dir builds
         if self.source_dir != self.object_dir:
             cmd.append('-P%s' % os.path.join(self.source_dir, project))
             cmd.append('--relocate-build-tree')
         else:
             cmd.append('-P%s' % project)
 
+        # Always pass --target so that 'Target value is enforced.
+        cmd.append('--target=%s' % self.data['canonical_target'])
+
+        # Pass common variables values computed during configure
+        # step and stored in setup.json
         if 'gprbuild' in self.data:
             for name, value in self.data['gprbuild'].iteritems():
                 cmd.append('-X%s=%s' % (name, value))
+
+        # Additional scenario variables coming usually from variants
         if 'gpr_vars' in kwargs:
             for name, value in kwargs['gpr_vars'].iteritems():
                 cmd.append('-X%s=%s' % (name, value))
 
         return self.run(*cmd, **kwargs)
+
+    @property
+    def prefix(self):
+        prefix = self.data['prefix']
+        # In integrated mode always install in a subdirectory which is
+        # target specific
+        if self.data['integrated']:
+            prefix = os.path.join(prefix, self.data['canonical_target'])
+        return prefix
 
     def gprbuild(self, project, *args, **kwargs):
         cmd = ['gprbuild', '-j%s' % self.data['jobs'], '-p']
@@ -169,22 +187,18 @@ class Config(object):
         return self.gprcmd(cmd, project, *args, **kwargs)
 
     def gprinstall(self, project, *args, **kwargs):
-        cmd = ['gprinstall', '-p', '-f']
-        prefix = self.data['prefix']
-        if self.data['integrated']:
-            prefix = os.path.join(prefix, self.data['canonical_target'])
-        cmd.append('--prefix=%s' % prefix)
+        # Sources are shared between all variants and put in
+        # include/<project_name> where project_name is the base name of
+        # project file.
+        cmd = ['gprinstall', '-p', '-f',
+               '--prefix=%s' % self.prefix,
+               '--sources-subdir=include/%s' % project[:-4]]
 
         return self.gprcmd(cmd, project, *args, **kwargs)
 
     def gpruninstall(self, project, *args, **kwargs):
-        cmd = ['gprinstall', '-p', '-f']
-        prefix = self.data['prefix']
-        if self.data['integrated']:
-            prefix = os.path.join(prefix, self.data['canonical_target'])
-        cmd.append('--prefix=%s' % prefix)
+        cmd = ['gprinstall', '-p', '-f', '--prefix=%s' % self.prefix]
         cmd.append('--uninstall')
-
         return self.gprcmd(cmd, project, *args, **kwargs)
 
     def run(self, *args, **kwargs):
@@ -249,7 +263,6 @@ class SetupApp(object):
                      'Installation directory', config.data['prefix'])
         for gpr_args, gpr_vars in self.variants(config, 'install'):
             config.gprinstall(self.project,
-                              '--prefix=%s' % config.data['prefix'],
                               *gpr_args,
                               gpr_vars=gpr_vars)
 
@@ -261,8 +274,7 @@ class SetupApp(object):
         if args.prefix is not None:
             config.set_data('prefix', args.prefix)
 
-        config.gpruninstall(self.project,
-                            '--prefix=%s' % config.data['prefix'])
+        config.gpruninstall(self.project)
 
     def create(self):
         self.main = argparse.ArgumentParser(description=self.description)
