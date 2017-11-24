@@ -118,7 +118,7 @@ class Config(object):
                 'gprconfig', '--config=ada',
                 '--target=%s' % self.data['target'],
                 '--mi-show-compilers',
-                grab=r' 1 normalized_target:(.*)')
+                grab=r' 1 normalized_target:(\S*)')
 
             default_prefix = os.path.dirname(
                 os.path.dirname(
