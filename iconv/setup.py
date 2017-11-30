@@ -28,7 +28,7 @@ class GNATCollIconv(SetupApp):
     def update_config(self, config, args):
         if args.enable_shared:
             config.set_data('library_types',
-                            ['relocatable', 'static', 'static-pic'])
+                            ['static', 'static-pic', 'relocatable'])
         else:
             config.set_data('library_types',
                             ['static'])
