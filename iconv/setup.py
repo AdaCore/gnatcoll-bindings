@@ -26,6 +26,9 @@ class GNATCollIconv(SetupApp):
             default=False)
 
     def update_config(self, config, args):
+        # The first element in library_types list define the default type of
+        # library that will be used. Do not rely on the default set in the
+        # project file.
         if args.enable_shared:
             config.set_data('library_types',
                             ['static', 'static-pic', 'relocatable'])

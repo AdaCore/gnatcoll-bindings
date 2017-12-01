@@ -123,9 +123,12 @@ class GNATCollPython(SetupApp):
         fetch_python_config(config)
 
         # Compute list of library types to build
+        # The first element in library_types list define the default type of
+        # library that will be used. Do not rely on the default set in the
+        # project file.
         if args.enable_shared:
             config.set_data('library_types',
-                            ['relocatable', 'static', 'static-pic'])
+                            ['static', 'static-pic', 'relocatable'])
         else:
             config.set_data('library_types',
                             ['static'])
