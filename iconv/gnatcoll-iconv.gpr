@@ -26,7 +26,7 @@ with "gnatcoll";
 project GnatColl.Iconv is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
-   Name    := "gnatcoll-iconv";
+   Name    := "gnatcoll_iconv";
 
    type Build_Type is ("DEBUG", "PROD");
    Build : Build_Type := External ("BUILD", "PROD");
