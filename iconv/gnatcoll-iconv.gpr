@@ -48,9 +48,11 @@ project GnatColl.Iconv is
    type OS_Kind is ("windows", "unix", "osx");
    OS : OS_Kind := External ("GNATCOLL_OS", "unix");
 
+   Iconv_Opt := External ("GNATCOLL_ICONV_OPT", "-liconv");
+
    case Library_Type is
       when "relocatable" =>
-         for Library_Options use ("-liconv");
+         for Library_Options use (Iconv_Opt);
       when others =>
          null;
    end case;
@@ -94,8 +96,7 @@ project GnatColl.Iconv is
    end Ide;
 
    package Linker is
-      for Linker_Options use ("-liconv");
-
+      for Linker_Options use (Iconv_Opt);
    end Linker;
 
 end GnatColl.Iconv;
