@@ -94,8 +94,8 @@ def fetch_python_config(config):
 
 
 class GNATCollPython(SetupApp):
-    name = 'gnatcoll-python'
-    project = 'gnatcoll-python.gpr'
+    name = 'gnatcoll_python'
+    project = 'gnatcoll_python.gpr'
     description = 'GNATColl Python bindings'
 
     def create(self):
@@ -170,6 +170,7 @@ class GNATCollPython(SetupApp):
             else:
                 result.append(([], gpr_vars))
         return result
+
 
 if __name__ == '__main__':
     app = GNATCollPython()

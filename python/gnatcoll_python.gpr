@@ -23,16 +23,20 @@
 
 with "gnatcoll";
 
-project GnatColl.Readline is
+project GnatColl_Python is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
-   Name    := "gnatcoll_readline";
+   Name    := "gnatcoll_python";
 
    type Build_Type is ("DEBUG", "PROD");
-   Build : Build_Type := External ("BUILD");
+   Build : Build_Type := External ("BUILD", "PROD");
 
    type Library_Type_Type is ("relocatable", "static", "static-pic");
-   Library_Type : Library_Type_Type := External ("LIBRARY_TYPE");
+   Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
+
+   Python_CFLAGS := External("GNATCOLL_PYTHON_CFLAGS", "");
+   Python_Static_Libs := External("GNATCOLL_PYTHON_STATIC_LIBS", "");
+   Python_Shared_Libs := External("GNATCOLL_PYTHON_SHARED_LIBS", "");
 
    for Source_Dirs     use (".");
    for Library_Kind    use Library_Type;
@@ -43,17 +47,17 @@ project GnatColl.Readline is
    for Library_Name    use Name;
    for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
 
-   case Library_Type is
-      when "relocatable" =>
-         for Library_Options use ("-lreadline");
-      when others =>
-         null;
-   end case;
-
-   for Languages use ("Ada");
+   for Languages use ("Ada", "C");
 
    type OS_Kind is ("windows", "unix", "osx");
    OS : OS_Kind := External ("GNATCOLL_OS", "unix");
+
+   case Library_Type is
+      when "relocatable" =>
+         for Library_Options use Split(Python_Shared_Libs, " ");
+      when others =>
+         null;
+   end case;
 
    package Compiler is
       case Build is
@@ -61,12 +65,13 @@ project GnatColl.Readline is
             for Switches ("Ada") use
               ("-g", "-O0", "-gnata", "-gnatVa", "-gnatQ", "-gnaty", "-gnateE",
                "-gnatwaCJe", "-fstack-check");
+            for Switches ("C") use ("-g", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
 
          when "PROD" =>
             --  Do not use -gnatwe for production mode
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
+            for Switches ("C") use ("-O2", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
       end case;
-
    end Compiler;
 
    package Binder is
@@ -87,8 +92,17 @@ project GnatColl.Readline is
       end case;
    end Builder;
 
+   package Linker is
+      case Library_Type is
+         when "relocatable" =>
+            for Linker_Options use Split(Python_Shared_Libs, " ");
+         when others =>
+            for Linker_Options use Split(Python_Static_Libs, " ");
+      end case;
+   end Linker;
+
    package Ide is
       for VCS_Kind use "Git";
    end Ide;
 
-end GnatColl.Readline;
+end GnatColl_Python;

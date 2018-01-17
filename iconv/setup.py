@@ -7,8 +7,8 @@ from setup_support import SetupApp
 
 
 class GNATCollIconv(SetupApp):
-    name = 'gnatcoll-iconv'
-    project = 'gnatcoll-iconv.gpr'
+    name = 'gnatcoll_iconv'
+    project = 'gnatcoll_iconv.gpr'
     description = 'GNATColl Iconv bindings'
 
     def create(self):
@@ -72,6 +72,7 @@ class GNATCollIconv(SetupApp):
             else:
                 result.append(([], gpr_vars))
         return result
+
 
 if __name__ == '__main__':
     app = GNATCollIconv()

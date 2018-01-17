@@ -7,8 +7,8 @@ from setup_support import SetupApp
 
 
 class GNATCollSyslog(SetupApp):
-    name = 'gnatcoll-syslog'
-    project = 'gnatcoll-syslog.gpr'
+    name = 'gnatcoll_syslog'
+    project = 'gnatcoll_syslog.gpr'
     description = 'GNATColl Syslog bindings'
 
     def create(self):
@@ -72,6 +72,7 @@ class GNATCollSyslog(SetupApp):
             else:
                 result.append(([], gpr_vars))
         return result
+
 
 if __name__ == '__main__':
     app = GNATCollSyslog()

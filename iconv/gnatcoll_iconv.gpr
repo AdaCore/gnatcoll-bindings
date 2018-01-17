@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl.Iconv is
+project GnatColl_Iconv is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_iconv";
@@ -99,4 +99,4 @@ project GnatColl.Iconv is
       for Linker_Options use (Iconv_Opt);
    end Linker;
 
-end GnatColl.Iconv;
+end GnatColl_Iconv;

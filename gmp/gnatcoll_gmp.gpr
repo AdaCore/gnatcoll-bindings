@@ -23,20 +23,16 @@
 
 with "gnatcoll";
 
-project GnatColl.Python is
+project GnatColl_GMP is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
-   Name    := "gnatcoll_python";
+   Name    := "gnatcoll_gmp";
 
    type Build_Type is ("DEBUG", "PROD");
-   Build : Build_Type := External ("BUILD", "PROD");
+   Build : Build_Type := External ("BUILD");
 
    type Library_Type_Type is ("relocatable", "static", "static-pic");
-   Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
-
-   Python_CFLAGS := External("GNATCOLL_PYTHON_CFLAGS", "");
-   Python_Static_Libs := External("GNATCOLL_PYTHON_STATIC_LIBS", "");
-   Python_Shared_Libs := External("GNATCOLL_PYTHON_SHARED_LIBS", "");
+   Library_Type : Library_Type_Type := External ("LIBRARY_TYPE");
 
    for Source_Dirs     use (".");
    for Library_Kind    use Library_Type;
@@ -49,12 +45,9 @@ project GnatColl.Python is
 
    for Languages use ("Ada", "C");
 
-   type OS_Kind is ("windows", "unix", "osx");
-   OS : OS_Kind := External ("GNATCOLL_OS", "unix");
-
    case Library_Type is
       when "relocatable" =>
-         for Library_Options use Split(Python_Shared_Libs, " ");
+         for Library_Options use ("-lgmp");
       when others =>
          null;
    end case;
@@ -65,13 +58,14 @@ project GnatColl.Python is
             for Switches ("Ada") use
               ("-g", "-O0", "-gnata", "-gnatVa", "-gnatQ", "-gnaty", "-gnateE",
                "-gnatwaCJe", "-fstack-check");
-            for Switches ("C") use ("-g", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
+            for Switches ("C") use ("-g", "-Wunreachable-code");
 
          when "PROD" =>
             --  Do not use -gnatwe for production mode
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
-            for Switches ("C") use ("-O2", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
+            for Switches ("C") use ("-O2", "-Wunreachable-code");
       end case;
+
    end Compiler;
 
    package Binder is
@@ -92,17 +86,17 @@ project GnatColl.Python is
       end case;
    end Builder;
 
-   package Linker is
-      case Library_Type is
-         when "relocatable" =>
-            for Linker_Options use Split(Python_Shared_Libs, " ");
-         when others =>
-            for Linker_Options use Split(Python_Static_Libs, " ");
-      end case;
-   end Linker;
-
    package Ide is
       for VCS_Kind use "Git";
    end Ide;
 
-end GnatColl.Python;
+   package Linker is
+      for Linker_Options use ("-lgmp");
+
+   end Linker;
+
+   package Install is
+      for Artifacts ("share/examples/gnatcoll/gmp") use ("examples/*");
+   end Install;
+
+end GnatColl_GMP;

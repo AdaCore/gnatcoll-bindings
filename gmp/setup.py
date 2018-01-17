@@ -7,8 +7,8 @@ from setup_support import SetupApp
 
 
 class GNATCollGMP(SetupApp):
-    name = 'gnatcoll-gmp'
-    project = 'gnatcoll-gmp.gpr'
+    name = 'gnatcoll_gmp'
+    project = 'gnatcoll_gmp.gpr'
     description = 'GNATColl GMP bindings'
 
     def create(self):
@@ -72,6 +72,7 @@ class GNATCollGMP(SetupApp):
             else:
                 result.append(([], gpr_vars))
         return result
+
 
 if __name__ == '__main__':
     app = GNATCollGMP()

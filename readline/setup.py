@@ -7,8 +7,8 @@ from setup_support import SetupApp
 
 
 class GNATCollReadline(SetupApp):
-    name = 'gnatcoll-readline'
-    project = 'gnatcoll-readline.gpr'
+    name = 'gnatcoll_readline'
+    project = 'gnatcoll_readline.gpr'
     description = 'GNATColl Readline bindings'
 
     def create(self):
@@ -79,6 +79,7 @@ class GNATCollReadline(SetupApp):
             else:
                 result.append(([], gpr_vars))
         return result
+
 
 if __name__ == '__main__':
     app = GNATCollReadline()
