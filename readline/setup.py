@@ -71,7 +71,8 @@ class GNATCollReadline(SetupApp):
         result = []
         for library_type in config.data['library_types']:
             gpr_vars = {'LIBRARY_TYPE': library_type,
-                        'XMLADA_BUILD': library_type}
+                        'XMLADA_BUILD': library_type,
+                        'GPR_BUILD': library_type}
             if cmd == 'install':
                 result.append((['--build-name=%s' % library_type,
                                 '--build-var=LIBRARY_TYPE'],
