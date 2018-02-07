@@ -88,11 +88,26 @@ def fetch_python_config(config):
     logging.info('  %-24s %s', 'Shared linker flags', python_shared_libs)
     logging.info('  %-24s %s', 'Static linker flags', python_static_libs)
 
+    # User does not have the choice between linking with static libpython
+    # and shared libpython. If --enable-shared was passed then we should
+    # link with the shared libpython, otherwise with the static one.
+    # Indeed otherwise some C modules might not work as expected or even
+    # crash. On windows always link with shared version of libpython
+    # (if the static is present, this is just an indirection to the shared)
+    if '--enable-shared' in config_vars.get('CONFIG_ARGS', '') or \
+            sys.platform.startswith('win'):
+        logging.info('Force link to shared python library')
+        config.set_data('GNATCOLL_PYTHON_LIBS',
+                        python_shared_libs, sub='gprbuild')
+        config.set_data('GNATCOLL_LIBPYTHON_KIND', 'shared',
+                        sub='gprbuild')
+    else:
+        logging.info('Force link to static python library')
+        config.set_data('GNATCOLL_PYTHON_LIBS',
+                        python_static_libs, sub='gprbuild')
+        config.set_data('GNATCOLL_LIBPYTHON_KIND', 'static',
+                        sub='gprbuild')
     config.set_data('GNATCOLL_PYTHON_CFLAGS', cflags, sub='gprbuild')
-    config.set_data('GNATCOLL_PYTHON_STATIC_LIBS',
-                    python_static_libs, sub='gprbuild')
-    config.set_data('GNATCOLL_PYTHON_SHARED_LIBS',
-                    python_shared_libs, sub='gprbuild')
 
 
 class GNATCollPython(SetupApp):

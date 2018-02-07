@@ -35,8 +35,8 @@ project GnatColl_Python is
    Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
 
    Python_CFLAGS := External("GNATCOLL_PYTHON_CFLAGS", "");
-   Python_Static_Libs := External("GNATCOLL_PYTHON_STATIC_LIBS", "");
-   Python_Shared_Libs := External("GNATCOLL_PYTHON_SHARED_LIBS", "");
+   Python_Libs := External("GNATCOLL_PYTHON_LIBS", "");
+   Libpython_Kind := External("GNATCOLL_LIBPYTHON_KIND", "shared");
 
    for Source_Dirs     use (".");
    for Library_Kind    use Library_Type;
@@ -54,7 +54,10 @@ project GnatColl_Python is
 
    case Library_Type is
       when "relocatable" =>
-         for Library_Options use Split(Python_Shared_Libs, " ");
+         case Libpython_Kind is
+            when "shared" =>
+               for Library_Options use Split(Python_Libs, " ");
+         end case;
       when others =>
          null;
    end case;
@@ -93,12 +96,7 @@ project GnatColl_Python is
    end Builder;
 
    package Linker is
-      case Library_Type is
-         when "relocatable" =>
-            for Linker_Options use Split(Python_Shared_Libs, " ");
-         when others =>
-            for Linker_Options use Split(Python_Static_Libs, " ");
-      end case;
+      for Linker_Options use Split(Python_Libs, " ");
    end Linker;
 
    package Ide is
