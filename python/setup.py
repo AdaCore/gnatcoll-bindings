@@ -8,11 +8,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from setup_support import SetupApp
 
 PYTHON_DATA_SCRIPT = """
-from distutils.sysconfig import get_config_var, get_python_inc, get_config_vars
+from distutils.sysconfig import (get_config_var, get_python_inc,
+                                 get_config_vars, PREFIX)
 import json
 result = {'config_vars': get_config_vars(),
           'python_inc': get_python_inc(),
-          'python_inc_plat': get_python_inc(plat_specific=True)}
+          'python_inc_plat': get_python_inc(plat_specific=True),
+          'prefix': PREFIX}
 print(json.dumps(result))
 """
 
@@ -28,7 +30,7 @@ def fetch_python_config(config):
     logging.info('  %-24s %s', 'Python version:', python_version)
 
     # Current python location
-    current_prefix = sys.prefix
+    current_prefix = python_data['prefix']
 
     # Fetch prefix during the buid process. Some paths of interest might still
     # reference a location used during the Python build process.
