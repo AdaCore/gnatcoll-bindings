@@ -227,7 +227,7 @@ class SetupApp(object):
     def variants(self, config, cmd):
         return [([], {})]
 
-    def build(self, args):
+    def build(self, args, extra_args=[]):
         config = Config(args)
         if not config.cache_loaded:
             self.update_config(config, args)
@@ -236,11 +236,11 @@ class SetupApp(object):
         for gpr_args, gpr_vars in self.variants(config, 'build'):
             config.gprbuild(
                 self.project,
-                *gpr_args,
+                *(gpr_args + extra_args),
                 gpr_vars=gpr_vars)
         return 0
 
-    def clean(self, args):
+    def clean(self, args, extra_args=[]):
         config = Config()
         if not config.cache_loaded:
             logging.info('nothing to clean')
@@ -248,10 +248,10 @@ class SetupApp(object):
 
         for gpr_args, gpr_vars in self.variants(config, 'clean'):
             config.gprclean(self.project,
-                            *gpr_args,
+                            *(gpr_args + extra_args),
                             gpr_vars=gpr_vars)
 
-    def install(self, args):
+    def install(self, args, extra_args=[]):
         config = Config()
         if not config.cache_loaded:
             logging.info('nothing to install')
@@ -263,10 +263,10 @@ class SetupApp(object):
                      'Installation directory', config.data['prefix'])
         for gpr_args, gpr_vars in self.variants(config, 'install'):
             config.gprinstall(self.project,
-                              *gpr_args,
+                              *(gpr_args + extra_args),
                               gpr_vars=gpr_vars)
 
-    def uninstall(self, args):
+    def uninstall(self, args, extra_args=[]):
         config = Config()
         if not config.cache_loaded:
             logging.info('nothing to uninstall')
@@ -274,7 +274,7 @@ class SetupApp(object):
         if args.prefix is not None:
             config.set_data('prefix', args.prefix)
 
-        config.gpruninstall(self.project)
+        config.gpruninstall(self.project, *extra_args)
 
     def create(self):
         self.main = argparse.ArgumentParser(description=self.description)
@@ -315,9 +315,9 @@ class SetupApp(object):
 
     def run(self):
         self.create()
-        args = self.main.parse_args()
+        args, extra_args = self.main.parse_known_args()
         try:
-            return args.command(args)
+            return args.command(args, extra_args)
         except CalledProcessError as e:
             logging.error('process failed with status: %s', e.returncode)
             return 1
