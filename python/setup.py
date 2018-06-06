@@ -89,12 +89,14 @@ def fetch_python_config(config):
     logging.info('  %-24s %s', 'Static linker flags', python_static_libs)
 
     # User does not have the choice between linking with static libpython
-    # and shared libpython. If --enable-shared was passed then we should
+    # and shared libpython. If --enable-shared or --enable-framework was
+    # passed to Python's configure during Python build, then we should
     # link with the shared libpython, otherwise with the static one.
     # Indeed otherwise some C modules might not work as expected or even
     # crash. On windows always link with shared version of libpython
     # (if the static is present, this is just an indirection to the shared)
     if '--enable-shared' in config_vars.get('CONFIG_ARGS', '') or \
+            '--enable-framework' in config_vars.get('CONFIG_ARGS', '') or \
             sys.platform.startswith('win'):
         logging.info('Force link to shared python library')
         config.set_data('GNATCOLL_PYTHON_LIBS',
