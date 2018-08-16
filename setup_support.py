@@ -227,7 +227,7 @@ class SetupApp(object):
     def variants(self, config, cmd):
         return [([], {})]
 
-    def build(self, args, extra_args=[]):
+    def build(self, args):
         config = Config(args)
         if not config.cache_loaded:
             self.update_config(config, args)
@@ -236,11 +236,11 @@ class SetupApp(object):
         for gpr_args, gpr_vars in self.variants(config, 'build'):
             config.gprbuild(
                 self.project,
-                *(gpr_args + extra_args),
+                *(gpr_args + args.gpr_opts + ['-gargs']),
                 gpr_vars=gpr_vars)
         return 0
 
-    def clean(self, args, extra_args=[]):
+    def clean(self, args):
         config = Config()
         if not config.cache_loaded:
             logging.info('nothing to clean')
@@ -248,10 +248,10 @@ class SetupApp(object):
 
         for gpr_args, gpr_vars in self.variants(config, 'clean'):
             config.gprclean(self.project,
-                            *(gpr_args + extra_args),
+                            *(gpr_args + args.gpr_opts),
                             gpr_vars=gpr_vars)
 
-    def install(self, args, extra_args=[]):
+    def install(self, args):
         config = Config()
         if not config.cache_loaded:
             logging.info('nothing to install')
@@ -263,10 +263,10 @@ class SetupApp(object):
                      'Installation directory', config.data['prefix'])
         for gpr_args, gpr_vars in self.variants(config, 'install'):
             config.gprinstall(self.project,
-                              *(gpr_args + extra_args),
+                              *(gpr_args + args.gpr_opts),
                               gpr_vars=gpr_vars)
 
-    def uninstall(self, args, extra_args=[]):
+    def uninstall(self, args):
         config = Config()
         if not config.cache_loaded:
             logging.info('nothing to uninstall')
@@ -274,7 +274,7 @@ class SetupApp(object):
         if args.prefix is not None:
             config.set_data('prefix', args.prefix)
 
-        config.gpruninstall(self.project, *extra_args)
+        config.gpruninstall(self.project, *args.gpr_opts)
 
     def create(self):
         self.main = argparse.ArgumentParser(description=self.description)
@@ -285,6 +285,11 @@ class SetupApp(object):
         # Build command
         self.build_cmd = self.parser.add_parser('build',
                                                 help='build %s' % self.name)
+        self.build_cmd.add_argument(
+            '--gpr-opts',
+            nargs=argparse.REMAINDER,
+            default=[],
+            help="pass remaining arguments to gprbuild")
         Config.add_arguments(self.build_cmd)
         self.build_cmd.set_defaults(command=self.build)
 
@@ -292,12 +297,22 @@ class SetupApp(object):
         self.clean_cmd = self.parser.add_parser(
             'clean',
             help='clean %s' % self.name)
+        self.clean_cmd.add_argument(
+            '--gpr-opts',
+            default=[],
+            nargs=argparse.REMAINDER,
+            help="pass remaining arguments to gprclean")
         self.clean_cmd.set_defaults(command=self.clean)
 
         # Install command
         self.install_cmd = self.parser.add_parser(
             'install',
             help='install %s' % self.name)
+        self.install_cmd.add_argument(
+                '--gpr-opts',
+                default=[],
+                nargs=argparse.REMAINDER,
+                help="pass remaining arguments to gprinstall")
         self.install_cmd.add_argument('--prefix',
                                       help='installation prefix',
                                       default=None)
@@ -307,6 +322,11 @@ class SetupApp(object):
         self.uninstall_cmd = self.parser.add_parser(
             'uninstall',
             help='uninstall %s' % self.name)
+        self.uninstall_cmd.add_argument(
+            '--gpr-opts',
+            default=[],
+            nargs=argparse.REMAINDER,
+            help="pass remaining arguments to gpruninstall")
         self.uninstall_cmd.add_argument('--prefix',
                                         help='un-installation prefix',
                                         default=None)
@@ -315,9 +335,9 @@ class SetupApp(object):
 
     def run(self):
         self.create()
-        args, extra_args = self.main.parse_known_args()
+        args = self.main.parse_args()
         try:
-            return args.command(args, extra_args)
+            return args.command(args)
         except CalledProcessError as e:
             logging.error('process failed with status: %s', e.returncode)
             return 1
