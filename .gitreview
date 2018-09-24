@@ -2,4 +2,4 @@
 host = git.adacore.com
 port = 29418
 project = gnatcoll-bindings
-defaultbranch = master
+defaultbranch = 19.0
