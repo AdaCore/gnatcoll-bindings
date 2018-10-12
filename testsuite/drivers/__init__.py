@@ -7,6 +7,7 @@ from e3.testsuite.result import TestStatus
 import os
 import logging
 import traceback
+import sys
 
 
 # Root directory of respectively the testsuite and the gnatcoll
@@ -14,6 +15,11 @@ import traceback
 TESTSUITE_ROOT_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
 GNATCOLL_ROOT_DIR = os.path.dirname(TESTSUITE_ROOT_DIR)
+
+PROJECT = {
+    'gmp': 'gnatcoll_gmp.gpr',
+    'iconv': 'gnatcoll_iconv.gpr'
+}
 
 
 def make_gnatcoll(work_dir, gcov=False):
@@ -29,7 +35,6 @@ def make_gnatcoll(work_dir, gcov=False):
     :rtype: (str, str, str)
     :raise AssertError: in case compilation of installation fails
     """
-    logging.info('Compiling gnatcoll (gcov=%s)' % gcov)
 
     # Create build tree structure
     build_dir = os.path.join(work_dir, 'build')
@@ -38,27 +43,38 @@ def make_gnatcoll(work_dir, gcov=False):
     mkdir(install_dir)
 
     # Compute make invocation
-    make_gnatcoll_cmd = [
-        'make', '-f', os.path.join(GNATCOLL_ROOT_DIR, 'Makefile'),
-        'ENABLE_SHARED=no']
-    if gcov:
-        make_gnatcoll_cmd += [
-            'BUILD=DEBUG',
-            'GPRBUILD_OPTIONS=-cargs -fprofile-arcs -ftest-coverage -gargs']
-    else:
-        make_gnatcoll_cmd += ['BUILD=PROD']
+    for binding in ('gmp', 'iconv', 'python'):
+        logging.info('Compiling gnatcoll %s (gcov=%s)', binding, gcov)
+        setup = os.path.join(GNATCOLL_ROOT_DIR, binding, 'setup.py')
+        obj_dir = os.path.join(build_dir, binding)
+        mkdir(obj_dir)
 
-    # Build & Install
-    p = Run(make_gnatcoll_cmd, cwd=build_dir)
-    assert p.status == 0, "gnatcoll build failed:\n%s" % p.out
+        build_cmd = [sys.executable, setup, 'build', '--disable-shared']
+        install_cmd = [sys.executable, setup, 'install',
+                       '--prefix', install_dir]
 
-    p = Run(make_gnatcoll_cmd + ['prefix=%s' % install_dir, 'install'],
-            cwd=build_dir)
-    assert p.status == 0, "gnatcoll installation failed:\n%s" % p.out
+        if gcov:
+            build_cmd += ['--gpr-opts', '-cargs', '-fprofile-arcs',
+                          '-ftest-coverage',
+                          '-largs', '-lgcov',
+                          '-gargs', '-XBUILD=DEBUG']
+        else:
+            build_cmd += ['-gpr-opts', '-XBUILD=PROD']
+
+        # Build & Install
+        p = Run(build_cmd, cwd=obj_dir)
+        assert p.status == 0, \
+            "gnatcoll %s build failed:\n%s" % (binding, p.out)
+        logging.debug('build:\n%s', p.out)
+
+        p = Run(install_cmd, cwd=obj_dir)
+        assert p.status == 0, \
+            "gnatcoll %s installation failed:\n%s" % (binding, p.out)
+        logging.debug('install:\n%s', p.out)
 
     return (os.path.join(install_dir, 'share', 'gpr'),
-            os.path.join(install_dir, 'include', 'gnatcoll'),
-            os.path.join(build_dir, 'obj', 'gnatcoll', 'static'))
+            os.path.join(install_dir, 'include'),
+            build_dir)
 
 
 def gprbuild(driver,
@@ -91,17 +107,25 @@ def gprbuild(driver,
     if scenario is None:
         scenario = {}
 
+    if cwd is None:
+        cwd = driver.test_env['working_dir']
+    mkdir(cwd)
+
     if project_file is None:
         project_file = os.path.join(driver.test_env['test_dir'],
                                     'test.gpr')
         if not os.path.isfile(project_file):
-            project_file = os.path.join(TESTSUITE_ROOT_DIR,
-                                        'support', 'test.gpr')
+            project_file = os.path.join(cwd, 'test.gpr')
+            with open(os.path.join(TESTSUITE_ROOT_DIR, 'support',
+                                   'test.gpr'), 'r') as fd:
+                content = fd.read()
+            with open(project_file, 'w') as fd:
+                for component in driver.test_env.get('components', []):
+                    fd.write('with "%s";\n' % PROJECT[component])
+                fd.write(content)
             scenario['TEST_SOURCES'] = driver.test_env['test_dir']
+    scenario['SUPPORT_SOURCES'] = os.path.join(TESTSUITE_ROOT_DIR, 'support')
 
-    if cwd is None:
-        cwd = driver.test_env['working_dir']
-    mkdir(cwd)
     gprbuild_cmd = [
         'gprbuild', '--relocate-build-tree', '-p', '-P', project_file]
     for k, v in scenario.iteritems():

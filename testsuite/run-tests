@@ -74,7 +74,7 @@ class MyTestsuite(Testsuite):
             total_covered = 0
 
             for source_file in ls(
-                    os.path.join(self.env.gnatcoll_src_dir, '*')):
+                    os.path.join(self.env.gnatcoll_src_dir, '*', '*')):
                 base_file = os.path.basename(source_file)
                 if not os.path.isfile(os.path.join(gcr, base_file + '.gcov')):
                     total = 1

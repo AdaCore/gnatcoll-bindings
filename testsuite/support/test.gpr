@@ -3,10 +3,12 @@
 --  The scenario variable TEST_SOURCES is automatically set by the
 --  driver to point to the test sources.
 with "gnatcoll";
+with "gnatcoll_iconv";
 
 project Test is
    Test_Sources := External("TEST_SOURCES");
-   for Source_Dirs use (".", Test_Sources);
+   Support_Sources := External("SUPPORT_SOURCES");
+   for Source_Dirs use (".", Test_Sources, Support_Sources);
    for Main use ("test.adb");
    for Languages use ("Ada", "C");
    for Object_Dir use "obj";
