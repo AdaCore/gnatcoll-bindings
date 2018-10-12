@@ -24,6 +24,12 @@ class GNATCollIconv(SetupApp):
             help='build project in debug mode',
             action="store_true",
             default=False)
+        self.build_cmd.add_argument(
+            '--force-libiconv',
+            help='if set force use of libiconv. By default on linux system '
+            'we rely on libc rather than libiconv',
+            action="store_true",
+            default=False)
 
     def update_config(self, config, args):
         # The first element in library_types list define the default type of
@@ -59,6 +65,13 @@ class GNATCollIconv(SetupApp):
             # Assume this is an Unix system
             gnatcoll_os = 'unix'
         config.set_data('GNATCOLL_OS', gnatcoll_os, sub='gprbuild')
+
+        # Set GNATCOLL_ICONV_OPT
+        if 'linux' in config.data['canonical_target'] and \
+                not args.force_libiconv:
+            config.set_data('GNATCOLL_ICONV_OPT', '', sub='gprbuild')
+        else:
+            config.set_data('GNATCOLL_ICONV_OPT', '-liconv', sub='gprbuild')
 
     def variants(self, config, cmd):
         result = []
