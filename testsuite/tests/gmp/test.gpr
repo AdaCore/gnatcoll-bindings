@@ -1,9 +1,0 @@
-with "gnatcoll_gmp";
-
-project Test is
-
-   for Main use ("test.adb");
-   for Object_Dir use "obj";
-   for Source_Dirs use (".", "../../support");
-
- end Test;

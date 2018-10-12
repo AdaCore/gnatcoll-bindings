@@ -1,1 +1,3 @@
 description: Test for GNATCOLL.GMP
+components:
+    - gmp
