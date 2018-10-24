@@ -1,4 +1,4 @@
-with "gnatcoll-gmp";
+with "gnatcoll_gmp";
 
 project GMP_Examples is
    for Main use ("square_triangular_numbers.adb", "isprime.adb");
