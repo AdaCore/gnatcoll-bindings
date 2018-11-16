@@ -280,7 +280,8 @@ class SetupApp(object):
         self.main = argparse.ArgumentParser(description=self.description)
         self.parser = self.main.add_subparsers(
             title='commands',
-            description='available commands')
+            description='available commands (do ./setup.py CMD --help '
+                        'for help on command CMD)')
 
         # Build command
         self.build_cmd = self.parser.add_parser('build',
