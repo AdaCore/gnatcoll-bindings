@@ -55,6 +55,27 @@ def which(prog, paths=None, default=''):
     return default
 
 
+SUPPORTED_LIBRARY_TYPES = {'static', 'static-pic', 'relocatable'}
+
+
+def decode_library_types(arg):
+    library_types = arg.split(',')
+    library_type_set = set(library_types)
+
+    # Make sure that all requested library types are supported
+    unsupported = library_type_set - SUPPORTED_LIBRARY_TYPES
+    if unsupported:
+        raise ValueError('Unsupported library types: {}'
+                         .format(', '.join(sorted(unsupported))))
+
+    # Make sure that the given list of library types contains no double entries
+    if len(library_types) != len(library_type_set):
+        raise ValueError('Library types cannot be requested twice')
+
+    # Return the list, and not the set, to keep the original ordering
+    return library_types
+
+
 class Config(object):
     def __init__(self, args=None):
         self.object_dir = os.path.abspath(os.getcwd())
@@ -86,6 +107,11 @@ class Config(object):
                             help='installation in platform specific subdir',
                             default=False,
                             action="store_true")
+        parser.add_argument('--library-types',
+                            default=['static', 'static-pic', 'relocatable'],
+                            type=decode_library_types,
+                            help='Comma-separated list of library types to'
+                                 ' build. By default, build all of them.')
 
     def init_data(self, args):
         if self.load_cache and os.path.isfile(self.json_cache):
@@ -130,6 +156,11 @@ class Config(object):
                 self.data['prefix'] = default_prefix
             else:
                 self.data['prefix'] = args.prefix
+
+        # The first element in library_types list define the default type of
+        # library that will be used. Do not rely on the default set in the
+        # project file.
+        self.data['library_types'] = args.library_types
 
     def set_data(self, name, value, sub=None):
         if sub is None:
