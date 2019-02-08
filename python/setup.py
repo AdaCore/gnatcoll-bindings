@@ -73,6 +73,8 @@ def fetch_python_config(config):
     python_shared_libs = "-L%s -lpython%s %s" % (shared_dir,
                                                  python_version,
                                                  python_libs)
+    python_static_libs = ''
+
     if os.path.isfile(
             os.path.join(static_dir, 'libpython%s.a' % python_version)):
         python_static_libs = '%s/libpython%s.a %s' % (static_dir,
