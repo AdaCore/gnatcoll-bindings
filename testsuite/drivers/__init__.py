@@ -49,7 +49,7 @@ def make_gnatcoll(work_dir, gcov=False):
         obj_dir = os.path.join(build_dir, binding)
         mkdir(obj_dir)
 
-        build_cmd = [sys.executable, setup, 'build', '--disable-shared']
+        build_cmd = [sys.executable, setup, 'build', '--library-types=static']
         install_cmd = [sys.executable, setup, 'install',
                        '--prefix', install_dir]
 

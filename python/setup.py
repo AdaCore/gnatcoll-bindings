@@ -120,12 +120,6 @@ class GNATCollPython(SetupApp):
     def create(self):
         super(GNATCollPython, self).create()
         self.build_cmd.add_argument(
-            '--disable-shared',
-            help='if set disable build of shared libraries',
-            dest='enable_shared',
-            default=True,
-            action="store_false")
-        self.build_cmd.add_argument(
             '--python-exec',
             help='set python executable location',
             metavar='PATH',
@@ -141,16 +135,6 @@ class GNATCollPython(SetupApp):
         config.set_data('python_exec', args.python_exec)
         fetch_python_config(config)
 
-        # Compute list of library types to build
-        # The first element in library_types list define the default type of
-        # library that will be used. Do not rely on the default set in the
-        # project file.
-        if args.enable_shared:
-            config.set_data('library_types',
-                            ['static', 'static-pic', 'relocatable'])
-        else:
-            config.set_data('library_types',
-                            ['static'])
         logging.info('%-26s %s',
                      'Libraries kind', ", ".join(config.data['library_types']))
 

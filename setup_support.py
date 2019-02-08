@@ -157,10 +157,10 @@ class Config(object):
             else:
                 self.data['prefix'] = args.prefix
 
-        # The first element in library_types list define the default type of
-        # library that will be used. Do not rely on the default set in the
-        # project file.
-        self.data['library_types'] = args.library_types
+            # The first element in library_types list define the default type
+            # of library that will be used. Do not rely on the default set in
+            # the project file.
+            self.data['library_types'] = args.library_types
 
     def set_data(self, name, value, sub=None):
         if sub is None:
