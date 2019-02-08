@@ -59,7 +59,7 @@ def make_gnatcoll(work_dir, gcov=False):
                           '-largs', '-lgcov',
                           '-gargs', '-XBUILD=DEBUG']
         else:
-            build_cmd += ['-gpr-opts', '-XBUILD=PROD']
+            build_cmd += ['--gpr-opts', '-XBUILD=PROD']
 
         # Build & Install
         p = Run(build_cmd, cwd=obj_dir)
