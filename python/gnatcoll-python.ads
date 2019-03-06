@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2017, AdaCore                     --
+--                     Copyright (C) 2003-2019, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1053,10 +1053,13 @@ package GNATCOLL.Python is
    --  your application.
 
    type Why_Trace_Func is private;
-   PyTrace_Call      : constant Why_Trace_Func;
-   PyTrace_Exception : constant Why_Trace_Func;
-   PyTrace_Line      : constant Why_Trace_Func;
-   PyTrace_Return    : constant Why_Trace_Func;
+   PyTrace_Call        : constant Why_Trace_Func;
+   PyTrace_Exception   : constant Why_Trace_Func;
+   PyTrace_Line        : constant Why_Trace_Func;
+   PyTrace_Return      : constant Why_Trace_Func;
+   PyTrace_C_Call      : constant Why_Trace_Func;
+   PyTrace_C_Exception : constant Why_Trace_Func;
+   PyTrace_C_Return    : constant Why_Trace_Func;
 
    type Py_Trace_Func is access function
      (User_Arg : PyObject;
@@ -1126,10 +1129,13 @@ private
    --  probably never change, though, so this should be safe.
 
    type Why_Trace_Func is new Integer;
-   PyTrace_Call      : constant Why_Trace_Func := 0;
-   PyTrace_Exception : constant Why_Trace_Func := 1;
-   PyTrace_Line      : constant Why_Trace_Func := 2;
-   PyTrace_Return    : constant Why_Trace_Func := 3;
+   PyTrace_Call        : constant Why_Trace_Func := 0;
+   PyTrace_Exception   : constant Why_Trace_Func := 1;
+   PyTrace_Line        : constant Why_Trace_Func := 2;
+   PyTrace_Return      : constant Why_Trace_Func := 3;
+   PyTrace_C_Call      : constant Why_Trace_Func := 4;
+   PyTrace_C_Exception : constant Why_Trace_Func := 5;
+   PyTrace_C_Return    : constant Why_Trace_Func := 6;
 
    type C_Callback_Record is new Integer; --  whatever
 
