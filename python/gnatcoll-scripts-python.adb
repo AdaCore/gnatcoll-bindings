@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2017, AdaCore                     --
+--                     Copyright (C) 2003-2019, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -40,6 +40,7 @@ package body GNATCOLL.Scripts.Python is
    Me_Error : constant Trace_Handle := Create ("PYTHON.ERROR", On);
    Me_Stack : constant Trace_Handle := Create ("PYTHON.TB", Off);
    Me_Log   : constant Trace_Handle := Create ("SCRIPTS.LOG", Off);
+   Me_Crash : constant Trace_Handle := Create ("PYTHON.TRACECRASH", On);
 
    Finalized : Boolean := True;
    --  Whether Python has been finalized (or never initialized).
@@ -417,7 +418,7 @@ package body GNATCOLL.Scripts.Python is
      (Condition : Boolean;
       Script    : Scripting_Language;
       Object    : PyObject) return Boolean;
-   --  Converts Python's value when Condition is true.
+   --  Converts Python's value when Condition is true
 
    function Internal_To (Object : PyObject; Name : String) return String;
    function Internal_To (Object : PyObject; Name : String) return Integer;
@@ -425,6 +426,24 @@ package body GNATCOLL.Scripts.Python is
    function Internal_To
      (Script : Scripting_Language; Object : PyObject) return Boolean;
    --  Converts Python's value
+
+   ----------------
+   -- Tracebacks --
+   ----------------
+
+   function Trace_Python_Code
+     (User_Arg : GNATCOLL.Python.PyObject;
+      Frame    : GNATCOLL.Python.PyFrameObject;
+      Why      : GNATCOLL.Python.Why_Trace_Func;
+      Object   : GNATCOLL.Python.PyObject) return Integer
+     with Convention => C;
+   --  Trace callback routine
+
+   Last_Call_Frame : PyFrameObject := null;
+   --  Global variable to save frame object of the last call
+
+   function Error_Message_With_Stack return String;
+   --  Returns error message with Python stack when available
 
    --------------------
    -- Block_Commands --
@@ -604,6 +623,10 @@ package body GNATCOLL.Scripts.Python is
          Minimum_Args  => 1,
          Maximum_Args  => 1,
          Language      => Python_Name);
+
+      if Active (Me_Crash) then
+         PyEval_SetTrace (Trace_Python_Code'Access, null);
+      end if;
    end Register_Python_Scripting;
 
    -----------------------------------
@@ -1976,6 +1999,12 @@ package body GNATCOLL.Scripts.Python is
       end if;
 
       return Obj;
+
+   exception
+      when E : others =>
+         Trace (Me_Error, E, Error_Message_With_Stack);
+
+         raise;
    end Execute_Command;
 
    ---------------------
@@ -4670,5 +4699,70 @@ package body GNATCOLL.Scripts.Python is
    begin
       PyEval_InitThreads;
    end Initialize_Threads_Support;
+
+   ------------------------------
+   -- Error_Message_With_Stack --
+   ------------------------------
+
+   function Error_Message_With_Stack return String is
+      F   : PyFrameObject := Last_Call_Frame;
+      Aux : Ada.Strings.Unbounded.Unbounded_String;
+
+   begin
+      if F /= null then
+         Append
+           (Aux, "Unexpected exception: Python execution stack" & ASCII.LF);
+
+         while F /= null loop
+            declare
+               Image : String :=
+                 Integer'Image (PyFrame_GetLineNumber (F));
+
+            begin
+               Image (Image'First) := ':';
+               Append
+                 (Aux,
+                  "  "
+                    & PyString_AsString
+                        (PyCode_Get_Filename (PyFrame_Get_Code (F)))
+                    & Image
+                    & ASCII.LF);
+            end;
+
+            F := PyFrame_Get_Back (F);
+         end loop;
+
+         return To_String (Aux);
+
+      else
+         return "Unexpected exception: ";
+      end if;
+   end Error_Message_With_Stack;
+
+   -----------------------
+   -- Trace_Python_Code --
+   -----------------------
+
+   function Trace_Python_Code
+     (User_Arg : GNATCOLL.Python.PyObject;
+      Frame    : GNATCOLL.Python.PyFrameObject;
+      Why      : GNATCOLL.Python.Why_Trace_Func;
+      Object   : GNATCOLL.Python.PyObject) return Integer
+   is
+      pragma Unreferenced (User_Arg);
+      pragma Unreferenced (Object);
+
+   begin
+      if Why in PyTrace_Call | PyTrace_C_Call then
+         if Last_Call_Frame /= null then
+            Py_DECREF (PyObject (Last_Call_Frame));
+         end if;
+
+         Last_Call_Frame := Frame;
+         Py_INCREF (PyObject (Last_Call_Frame));
+      end if;
+
+      return 0;
+   end Trace_Python_Code;
 
 end GNATCOLL.Scripts.Python;
