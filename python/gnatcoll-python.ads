@@ -68,6 +68,7 @@ package GNATCOLL.Python is
    --  value.
 
    type PyCodeObject is new PyObject;
+   type PyFrameObject is new PyObject;
 
    procedure Py_INCREF (Obj : PyObject);
    procedure Py_DECREF (Obj : PyObject);
@@ -1063,7 +1064,7 @@ package GNATCOLL.Python is
 
    type Py_Trace_Func is access function
      (User_Arg : PyObject;
-      Frame    : System.Address;
+      Frame    : PyFrameObject;
       Why      : Why_Trace_Func;
       Object   : PyObject) return Integer;
    --  Return 0 in case of success, or -1 if an exception is raised.
@@ -1077,6 +1078,25 @@ package GNATCOLL.Python is
 
    procedure PyEval_SetTrace (Proc : Py_Trace_Func; User_Arg : PyObject);
    --  Register a new tracing function
+
+   function PyFrame_GetLineNumber (Frame : PyFrameObject) return Integer;
+   --  Return the line number that frame is currently executing.
+
+   function PyFrame_Get_Code (Frame : PyFrameObject) return PyCodeObject;
+   --  Return code object associated with the frame.
+   --  Returns a borrowed reference, no need to Py_DECREF
+
+   function PyCode_Get_Filename (Code : PyCodeObject) return PyObject;
+   --  Return file name of the code object.
+   --  Returns a borrowed reference, no need to Py_DECREF
+
+   function PyCode_Get_Name (Code : PyCodeObject) return PyObject;
+   --  Return function name of the code object.
+   --  Returns a borrowed reference, no need to Py_DECREF
+
+   function PyFrame_Get_Back (Frame : PyFrameObject) return PyFrameObject;
+   --  Return previous frame in stack.
+   --  Returns a borrowed reference, no need to Py_DECREF
 
    -------------------------------------
    -- Embedding Ada objects in python --
@@ -1210,5 +1230,10 @@ private
    pragma Import (C, PyCObject_GetDesc, "PyCObject_GetDesc");
    pragma Import (C, PyMethod_Function, "PyMethod_Function");
    pragma Import (C, PyMethod_Self, "PyMethod_Self");
+   pragma Import (C, PyFrame_GetLineNumber, "PyFrame_GetLineNumber");
+   pragma Import (C, PyFrame_Get_Code, "ada_pyframe_get_code");
+   pragma Import (C, PyFrame_Get_Back, "ada_pyframe_get_back");
+   pragma Import (C, PyCode_Get_Filename, "ada_pycode_get_filename");
+   pragma Import (C, PyCode_Get_Name, "ada_pycode_get_name");
 
 end GNATCOLL.Python;

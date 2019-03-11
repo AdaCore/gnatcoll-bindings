@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 --                          G N A T C O L L                                 --
 --                                                                          --
---                     Copyright (C) 2003-2017, AdaCore                     --
+--                     Copyright (C) 2003-2019, AdaCore                     --
 --                                                                          --
 -- This is free software;  you can redistribute it  and/or modify it  under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -20,6 +20,7 @@
 #define PY_LONG_LONG long long
 #include <Python.h>
 #include <compile.h>  /* PyCodeObject definition in older versions*/
+#include <frameobject.h>  /* PyFrameObject definition */
 #include <string.h>
 
 /* On Windows and if we have HAVE_DECLSPEC_DLL defined remove the
@@ -890,3 +891,27 @@ int ada_is_python3() {
   return 0;
 }
 #endif
+
+PyCodeObject*
+ada_pyframe_get_code (PyFrameObject* obj)
+{
+   return obj->f_code;
+}
+
+PyFrameObject*
+ada_pyframe_get_back (PyFrameObject* obj)
+{
+   return obj->f_back;
+}
+
+PyObject*
+ada_pycode_get_filename (PyCodeObject* obj)
+{
+   return obj->co_filename;
+}
+
+PyObject*
+ada_pycode_get_name (PyCodeObject* obj)
+{
+   return obj->co_name;
+}
