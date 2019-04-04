@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2017, AdaCore                     --
+--                     Copyright (C) 2003-2019, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -190,6 +190,9 @@ package GNATCOLL.Scripts.Python is
    --  is running).
    --  Finally, this acquires the Global Interpreter Lock (it runs the
    --  equivalent of End_Allow_Threads)
+
+   function Python_Backtrace return String;
+   --  Return current traceback of execution of the Python code.
 
 private
    type PyThreadState is new System.Address;

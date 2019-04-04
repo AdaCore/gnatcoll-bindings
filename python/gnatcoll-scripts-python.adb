@@ -4700,19 +4700,16 @@ package body GNATCOLL.Scripts.Python is
       PyEval_InitThreads;
    end Initialize_Threads_Support;
 
-   ------------------------------
-   -- Error_Message_With_Stack --
-   ------------------------------
+   ----------------------
+   -- Python_Backtrace --
+   ----------------------
 
-   function Error_Message_With_Stack return String is
+   function Python_Backtrace return String is
       F   : PyFrameObject := Last_Call_Frame;
       Aux : Ada.Strings.Unbounded.Unbounded_String;
 
    begin
       if F /= null then
-         Append
-           (Aux, "Unexpected exception: Python execution stack" & ASCII.LF);
-
          while F /= null loop
             declare
                Image : String :=
@@ -4731,6 +4728,23 @@ package body GNATCOLL.Scripts.Python is
 
             F := PyFrame_Get_Back (F);
          end loop;
+      end if;
+
+      return To_String (Aux);
+   end Python_Backtrace;
+
+   ------------------------------
+   -- Error_Message_With_Stack --
+   ------------------------------
+
+   function Error_Message_With_Stack return String is
+      Aux : Ada.Strings.Unbounded.Unbounded_String;
+
+   begin
+      if Last_Call_Frame /= null then
+         Append
+           (Aux, "Unexpected exception: Python execution stack" & ASCII.LF);
+         Append (Aux, Python_Backtrace);
 
          return To_String (Aux);
 
