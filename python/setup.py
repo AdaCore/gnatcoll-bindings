@@ -74,12 +74,9 @@ def fetch_python_config(config):
                                                  python_version,
                                                  python_libs)
     python_static_libs = ''
-
-    if os.path.isfile(
-            os.path.join(static_dir, 'libpython%s.a' % python_version)):
-        python_static_libs = '%s/libpython%s.a %s' % (static_dir,
-                                                      python_version,
-                                                      python_libs)
+    libpython_a = os.path.join(static_dir, 'libpython%s.a' % python_version)
+    if os.path.isfile(libpython_a):
+        python_static_libs = libpython_a + ' ' + python_libs
     if sys.platform.startswith('linux'):
         # On Linux platform, even when linking with the static libpython,
         # symbols not used by the application itself should be exported so
