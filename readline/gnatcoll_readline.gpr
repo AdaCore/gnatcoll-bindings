@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_Readline is
+library project GnatColl_Readline is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_readline";

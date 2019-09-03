@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_Python is
+library project GnatColl_Python is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_python";

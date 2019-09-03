@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_ZLib is
+library project GnatColl_ZLib is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_zlib";

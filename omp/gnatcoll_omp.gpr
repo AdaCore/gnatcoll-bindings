@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_OMP is
+library project GnatColl_OMP is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_omp";

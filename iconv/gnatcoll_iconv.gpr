@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_Iconv is
+library project GnatColl_Iconv is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_iconv";
