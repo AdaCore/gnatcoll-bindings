@@ -46,6 +46,7 @@ library project GnatColl_Readline is
    case Library_Type is
       when "relocatable" =>
          for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
+         for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
          for Library_Options use ("-lreadline");
       when others =>
          null;
@@ -65,6 +66,8 @@ library project GnatColl_Readline is
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
       end case;
 
+      for Switches ("Ada") use Compiler'Switches ("Ada")
+        & External_As_List ("ADAFLAGS", " ");
    end Compiler;
 
    package Binder is

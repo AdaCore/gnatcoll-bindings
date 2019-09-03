@@ -47,6 +47,7 @@ library project GnatColl_ZLib is
 
    case Library_Type is
       when "relocatable" =>
+         for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
          for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
          for Library_Options use (Link_Opt);
       when others =>
@@ -67,6 +68,8 @@ library project GnatColl_ZLib is
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
       end case;
 
+      for Switches ("Ada") use Compiler'Switches ("Ada")
+        & External_As_List ("ADAFLAGS", " ");
    end Compiler;
 
    package Binder is
