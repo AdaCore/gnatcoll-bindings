@@ -50,9 +50,6 @@ library project GnatColl_Python is
 
    for Languages use ("Ada", "C");
 
-   type OS_Kind is ("windows", "unix", "osx");
-   OS : OS_Kind := External ("GNATCOLL_OS", "unix");
-
    case Library_Type is
       when "relocatable" =>
          for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;

@@ -45,9 +45,6 @@ library project GnatColl_Iconv is
 
    for Languages use ("Ada", "C");
 
-   type OS_Kind is ("windows", "unix", "osx");
-   OS : OS_Kind := External ("GNATCOLL_OS", "unix");
-
    Iconv_Opt := External ("GNATCOLL_ICONV_OPT", "-liconv");
 
    case Library_Type is

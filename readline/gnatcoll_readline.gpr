@@ -53,9 +53,6 @@ library project GnatColl_Readline is
 
    for Languages use ("Ada");
 
-   type OS_Kind is ("windows", "unix", "osx");
-   OS : OS_Kind := External ("GNATCOLL_OS", "unix");
-
    package Compiler is
       case Build is
          when "DEBUG" =>
