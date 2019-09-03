@@ -40,7 +40,6 @@ library project GnatColl_OMP is
    for Object_Dir      use "obj/" & Project'Library_Kind;
    for Library_Dir     use "lib/" & Project'Library_Kind;
    for Library_Name    use Name;
-   for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
 
    Link_Opt := "-fopenmp";
 
@@ -48,6 +47,7 @@ library project GnatColl_OMP is
 
    case Library_Type is
       when "relocatable" =>
+         for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
          for Library_Options use (Link_Opt);
       when others =>
          null;

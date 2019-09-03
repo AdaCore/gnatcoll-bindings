@@ -47,7 +47,6 @@ library project GnatColl_Python is
    for Library_Dir
       use "lib/" & Project'Library_Kind;
    for Library_Name    use Name;
-   for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
 
    for Languages use ("Ada", "C");
 
@@ -56,6 +55,7 @@ library project GnatColl_Python is
 
    case Library_Type is
       when "relocatable" =>
+         for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
          case Libpython_Kind is
             when "shared" =>
                for Library_Options use Split(Python_Libs, " ");
