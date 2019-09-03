@@ -3740,9 +3740,8 @@ package body GNATCOLL.Scripts.Python is
       else
          Cons := Run_Command
            (Script,
-            "sys.stdout = sys.__stdout__" & ASCII.LF
-            & "sys.stdin  = sys.__stdin__" & ASCII.LF
-            & "sys.stderr = sys.__stderr__",
+            "sys.stdout, sys.stdin, sys.stderr = "
+              & "sys.__stdout__, sys.__stdin__, sys.__stderr__",
             Hide_Output => True,
             Need_Output => False,
             Errors      => Errors'Access);
