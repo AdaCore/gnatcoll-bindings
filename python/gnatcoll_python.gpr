@@ -35,8 +35,8 @@ library project GnatColl_Python is
    type Library_Type_Type is ("relocatable", "static", "static-pic");
    Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
 
-   Python_CFLAGS := External("GNATCOLL_PYTHON_CFLAGS", "");
-   Python_Libs := External("GNATCOLL_PYTHON_LIBS", "");
+   Python_CFLAGS     := External_As_List ("GNATCOLL_PYTHON_CFLAGS", " ");
+   Python_Libs       := External_As_List ("GNATCOLL_PYTHON_LIBS", " ");
    Python_Static_Lib := External("GNATCOLL_PYTHON_STATIC_LIB", "");
    Libpython_Kind := External("GNATCOLL_LIBPYTHON_KIND", "shared");
 
@@ -55,7 +55,7 @@ library project GnatColl_Python is
          for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
          case Libpython_Kind is
             when "shared" =>
-               for Library_Options use Split(Python_Libs, " ");
+               for Library_Options use Python_Libs;
          end case;
       when others =>
          null;
@@ -67,12 +67,12 @@ library project GnatColl_Python is
             for Switches ("Ada") use
               ("-g", "-O0", "-gnata", "-gnatVa", "-gnatQ", "-gnaty", "-gnateE",
                "-gnatwaCJe", "-fstack-check");
-            for Switches ("C") use ("-g", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
+            for Switches ("C") use ("-g", "-Wunreachable-code") & Python_CFLAGS;
 
          when "PROD" =>
             --  Do not use -gnatwe for production mode
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
-            for Switches ("C") use ("-O2", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
+            for Switches ("C") use ("-O2", "-Wunreachable-code") & Python_CFLAGS;
       end case;
    end Compiler;
 
@@ -97,9 +97,9 @@ library project GnatColl_Python is
    package Linker is
       case Libpython_Kind is
          when "shared" =>
-            for Linker_Options use Split(Python_Libs, " ");
+            for Linker_Options use Python_Libs;
          when others =>
-            for Linker_Options use (Python_Static_Lib) & Split(Python_Libs, " ");
+            for Linker_Options use (Python_Static_Lib) & Python_Libs;
       end case;
    end Linker;
 
