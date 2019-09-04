@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2019, AdaCore                     --
+--                     Copyright (C) 2003-2020, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -853,6 +853,7 @@ package GNATCOLL.Python is
 
    function PyFile_FromString (File_Name, Mode : String) return PyObject;
    --  Create an instance of file.
+   --  Python3 removes this function. Use "io.open()" instead.
 
    -----------------
    -- Class types --

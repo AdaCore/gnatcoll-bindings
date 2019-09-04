@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 --                          G N A T C O L L                                 --
 --                                                                          --
---                     Copyright (C) 2003-2019, AdaCore                     --
+--                     Copyright (C) 2003-2020, AdaCore                     --
 --                                                                          --
 -- This is free software;  you can redistribute it  and/or modify it  under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -885,6 +885,16 @@ PyAPI_FUNC(PyObject *) PyCObject_FromVoidPtr(
          "GNATCOLL._C_API" /* name */,
          (PyCapsule_Destructor) destruct);
 };
+
+PyAPI_FUNC(PyObject *) PyFile_FromString
+  (const char *file_name, const char *mode)
+{
+  PyObject * io = PyImport_ImportModule ("io");
+  if (io == NULL) {
+    return NULL;
+  }
+  return PyObject_CallMethod (io, "open", "ss", file_name, mode);
+}
 
 #else
 int ada_is_python3() {
