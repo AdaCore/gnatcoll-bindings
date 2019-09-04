@@ -388,25 +388,14 @@ ada_pystring_check (PyObject* obj)
 PyObject* ada_PyUnicode_AsEncodedString
   (PyObject *unicode, const char *encoding, const char *errors)
 {
-#ifdef Py_UNICODE_WIDE
-  return PyUnicodeUCS4_AsEncodedString (unicode, encoding, errors);
-#else
-  return PyUnicodeUCS2_AsEncodedString (unicode, encoding, errors);
-#endif
+  //  A macro in python2.
+  return PyUnicode_AsEncodedString (unicode, encoding, errors);
 }
 
 PyObject* ada_PyUnicode_FromString (const char *u)
 {
-#if PY_VERSION_HEX >= 0x02060000
-#ifdef Py_UNICODE_WIDE
-  return PyUnicodeUCS4_FromString (u);
-#else
-  return PyUnicodeUCS2_FromString (u);
-#endif
-#else
-  /* Not available in this version */
-  return 0;
-#endif
+  //  A macro in python2.
+  return PyUnicode_FromString (u);
 }
 
 int
