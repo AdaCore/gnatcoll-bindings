@@ -886,6 +886,16 @@ PyAPI_FUNC(PyObject *) PyCObject_FromVoidPtr(
          (PyCapsule_Destructor) destruct);
 };
 
+PyAPI_FUNC(PyObject *) PyFile_FromString
+  (const char *file_name, const char *mode)
+{
+  PyObject * io = PyImport_ImportModule ("io");
+  if (io == NULL) {
+    return NULL;
+  }
+  return PyObject_CallMethod (io, "open", "ss", file_name, mode);
+}
+
 #else
 int ada_is_python3() {
   return 0;

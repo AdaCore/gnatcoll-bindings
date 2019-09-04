@@ -854,6 +854,7 @@ package GNATCOLL.Python is
 
    function PyFile_FromString (File_Name, Mode : String) return PyObject;
    --  Create an instance of file.
+   --  Python3 removes this function. Use "io.open()" instead.
 
    -----------------
    -- Class types --
