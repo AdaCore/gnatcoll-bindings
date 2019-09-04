@@ -408,10 +408,17 @@ int
 ada_pyint_check (PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
+  //  Not available anymore.
   return PyLong_Check (obj);
 #else
+  //  May be a macro.
   return PyInt_Check (obj);
 #endif
+}
+
+//  May be a macro.
+PyAPI_FUNC(int) ada_pylong_check (PyObject* obj) {
+  return PyLong_Check (obj);
 }
 
 int
@@ -849,6 +856,10 @@ int ada_is_python3() {
 
 PyAPI_FUNC(PyObject *) PyInt_FromLong(long val) {
    return PyLong_FromLong(val);
+};
+
+PyAPI_FUNC(PyObject *) PyInt_FromSize_t(size_t val) {
+   return PyLong_FromSize_t(val);
 };
 
 PyAPI_FUNC(long) PyInt_AsLong(PyObject * val) {

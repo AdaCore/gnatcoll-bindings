@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2019, AdaCore                     --
+--                     Copyright (C) 2003-2020, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -257,6 +257,17 @@ package body GNATCOLL.Python is
    begin
       return Internal (Obj) = 1;
    end PyInt_Check;
+
+   ------------------
+   -- PyLong_Check --
+   ------------------
+
+   function PyLong_Check (Obj : PyObject) return Boolean is
+      function Internal (Obj : PyObject) return Integer
+        with Import, Convention => C, External_Name => "ada_pylong_check";
+   begin
+      return Internal (Obj) = 1;
+   end PyLong_Check;
 
    -------------------
    -- PyFloat_Check --
