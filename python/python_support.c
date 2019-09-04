@@ -235,7 +235,7 @@ static PyObject * adamethod_descr_get
                  "doesn't apply to '%s' object",
                  PyDescr_NAME(descr), "?",
                  PyDescr_TYPE(descr)->tp_name,
-                 obj->ob_type->tp_name);
+                 Py_TYPE(obj)->tp_name);
     return NULL;
   }
   return PyMethod_New (descr->cfunc, obj);
@@ -306,7 +306,7 @@ void ada_py_add_method
 int
 ada_pyget_refcount (PyObject* obj)
 {
-   return obj->ob_refcnt;
+   return Py_REFCNT(obj);
 }
 
 char*
@@ -315,7 +315,7 @@ ada_py_refcount_msg (PyObject* obj)
    static char msg[200];
    if (obj) {
       snprintf (msg, 199, "%p (%s, rc=%ld)",
-                obj, obj->ob_type->tp_name, obj->ob_refcnt);
+                obj, Py_TYPE(obj)->tp_name, Py_REFCNT(obj));
    } else {
       msg[0] = '\0';
    }
@@ -597,7 +597,7 @@ ada_pymethod_check (PyObject* obj)
 PyTypeObject*
 ada_gettypeobject (PyObject* obj)
 {
-  return (PyTypeObject*)(obj->ob_type);
+  return (PyTypeObject*)(Py_TYPE(obj));
 }
 
 char*
