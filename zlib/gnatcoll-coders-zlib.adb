@@ -67,15 +67,15 @@ package body GNATCOLL.Coders.ZLib is
    --  Simple_GZip_Header'Last <= Footer_Array'Last.
 
    Return_Code : constant array (Thin.Int range <>) of Return_Code_Enum :=
-     (0 => OK,
-      1 => STREAM_END,
-      2 => NEED_DICT,
-     -1 => ERRNO,
-     -2 => STREAM_ERROR,
-     -3 => DATA_ERROR,
-     -4 => MEM_ERROR,
-     -5 => BUF_ERROR,
-     -6 => VERSION_ERROR);
+     (Z_OK            => OK,
+      Z_STREAM_END    => STREAM_END,
+      Z_NEED_DICT     => NEED_DICT,
+      Z_ERRNO         => ERRNO,
+      Z_STREAM_ERROR  => STREAM_ERROR,
+      Z_DATA_ERROR    => DATA_ERROR,
+      Z_MEM_ERROR     => MEM_ERROR,
+      Z_BUF_ERROR     => BUF_ERROR,
+      Z_VERSION_ERROR => VERSION_ERROR);
 
    Flate : constant array (Boolean) of Flate_Type :=
              (True  => (Step => Thin.Deflate'Access,
@@ -90,8 +90,6 @@ package body GNATCOLL.Coders.ZLib is
       Finish     => Z_FINISH);
 
    procedure Raise_Error (Stream : Z_Stream) with Inline;
-
-   procedure Check_Error (Stream : Z_Stream; Code : Thin.Int);
 
    function CRC32
      (CRC  : Unsigned_32;
@@ -323,8 +321,15 @@ package body GNATCOLL.Coders.ZLib is
 
       if Code = Thin.Z_STREAM_END then
          Coder.Stream_End := True;
-      else
-         Check_Error (Coder.Stream.all, Code);
+
+      elsif Code /= Z_OK
+        and then
+          (Code /= Z_BUF_ERROR
+           or else Flush = No_Flush
+           or else In_Data'Length > 0)
+      then
+         raise ZLib_Error with Return_Code_Enum'Image (Return_Code (Code)) &
+           ": " & Last_Error_Message (Coder.Stream.all);
       end if;
 
       In_Last  := In_Data'Last
@@ -493,18 +498,6 @@ package body GNATCOLL.Coders.ZLib is
    begin
       raise ZLib_Error with Last_Error_Message (Stream);
    end Raise_Error;
-
-   -----------------
-   -- Check_Error --
-   -----------------
-
-   procedure Check_Error (Stream : Z_Stream; Code : Thin.Int) is
-   begin
-      if Code /= Thin.Z_OK then
-         raise ZLib_Error with Return_Code_Enum'Image (Return_Code (Code)) &
-           ": " & Last_Error_Message (Stream);
-      end if;
-   end Check_Error;
 
    -----------
    -- Close --

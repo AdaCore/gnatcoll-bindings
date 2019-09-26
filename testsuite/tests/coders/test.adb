@@ -131,6 +131,7 @@ function Test return Integer is
    procedure Test_Stream_Coder (Coder, Back : in out Coder_Class) is
       Test_Stream  : aliased Test_Streams.Stream_Type;
       Coder_Stream : Streams.Stream_Type;
+      Test_2_Flush : Boolean := True;
    begin
       Test_Stream.Set_Limit (2_000_000);
       Coder_Stream.Initialize
@@ -149,6 +150,22 @@ function Test return Integer is
             Coder_Stream.Write (Buffer (1 .. Last));
 
             exit when Coder_Stream.End_Of_Input;
+
+            if Test_2_Flush and then Coder.Total_Out > 16000 then
+               loop
+                  Coder_Stream.Flush_Read (Buffer, Last);
+                  Coder_Stream.Write (Buffer (1 .. Last));
+                  exit when Last < Buffer'Last;
+               end loop;
+
+               Coder_Stream.Flush_Read (Buffer, Last);
+               A.Assert (Last = Buffer'First - 1, "Flushed");
+
+               Coder_Stream.Flush_Read (Buffer, Last);
+               A.Assert (Last = Buffer'First - 1, "Flushed");
+
+               Test_2_Flush := False;
+            end if;
 
             --  Put_Line (Coder.Total_In'Img & Coder.Total_Out'Img);
          end;
@@ -189,7 +206,7 @@ begin
          Stamp : constant Time := Clock;
       begin
          Test_Stream_Coder (Coder_X, Back_X);
-         --  Put_Line (Duration'Image (Clock - Stamp));
+         --  Put_Line (T'Img & Duration'Image (Clock - Stamp));
       end;
    end loop;
 
