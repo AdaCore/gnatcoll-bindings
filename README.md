@@ -64,6 +64,7 @@ The following bindings are provided:
 
 - [gmp](gmp/README.md)
 - [iconv](iconv/README.md)
+- [omp](omp/README.md)
 - [python](python/README.md)
 - [readline](readline/README.md)
 - [syslog](syslog/README.md)

@@ -1,0 +1,4 @@
+description: Test for GNATCOLL.OMP parallel sort
+components:
+    - omp
+

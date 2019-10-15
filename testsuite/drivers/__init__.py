@@ -17,6 +17,7 @@ TESTSUITE_ROOT_DIR = os.path.dirname(
 GNATCOLL_ROOT_DIR = os.path.dirname(TESTSUITE_ROOT_DIR)
 
 PROJECT = {
+    'omp': 'gnatcoll_omp.gpr',
     'gmp': 'gnatcoll_gmp.gpr',
     'iconv': 'gnatcoll_iconv.gpr'
 }
@@ -43,7 +44,7 @@ def make_gnatcoll(work_dir, gcov=False):
     mkdir(install_dir)
 
     # Compute make invocation
-    for binding in ('gmp', 'iconv', 'python'):
+    for binding in ('gmp', 'omp', 'iconv', 'python'):
         logging.info('Compiling gnatcoll %s (gcov=%s)', binding, gcov)
         setup = os.path.join(GNATCOLL_ROOT_DIR, binding, 'setup.py')
         obj_dir = os.path.join(build_dir, binding)
