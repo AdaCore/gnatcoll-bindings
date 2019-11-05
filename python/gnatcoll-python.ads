@@ -707,8 +707,7 @@ package GNATCOLL.Python is
    -- Object types --
    ------------------
 
-   type PyTypeObject_Record is private;
-   type PyTypeObject is access all PyTypeObject_Record;
+   subtype PyTypeObject is PyObject;
    --  The internal structure that describes a Python type (and all the default
    --  primitive subprograms like __getattr__, __setattr__, ...
 
@@ -1163,9 +1162,6 @@ private
      (Interfaces.C.Strings.Null_Ptr, null, 0,
       Interfaces.C.Strings.Null_Ptr);
    No_MethodDef_Array : constant PyMethodDef_Array := (1 .. 0 => No_MethodDef);
-
-   type PyTypeObject_Record is new Integer; --  whatever
-   pragma Convention (C, PyTypeObject);
 
    pragma Convention (C, Py_Trace_Func);
    pragma Import (C, PyDict_New, "PyDict_New");
