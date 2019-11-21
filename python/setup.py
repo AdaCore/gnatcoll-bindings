@@ -27,13 +27,14 @@ def fetch_python_config(config):
     python_data = json.loads(python_output)
     config_vars = python_data['config_vars']
     python_version = config_vars["VERSION"]
+    python_ldversion = config_vars.get("LDVERSION", python_version)
     logging.info('  %-24s %s', 'Python version:', python_version)
 
     # Current python location
     current_prefix = python_data['prefix']
 
-    # Fetch prefix during the buid process. Some paths of interest might still
-    # reference a location used during the Python build process.
+    # Fetch prefix during the build process. Some paths of interest might
+    # still reference a location used during the Python build process.
     build_prefix = ([sys.prefix] +
                     re.findall(r"'--prefix=([^']+)'",
                                config_vars.get('CONFIG_ARGS', '')))[-1]
@@ -42,12 +43,11 @@ def fetch_python_config(config):
         if os.path.isabs(path):
             rel_path = os.path.relpath(path, build_prefix)
             if not rel_path.startswith(os.pardir):
-                # The input path is relative to the original build directory
-                # replace build prefix by current one.
+                # If the input path is relative to the original build
+                # directory, replace build prefix by the current one.
                 return os.path.join(current_prefix, rel_path)
             else:
-                # The input path is not relative to original build directory
-                # thus return it unchanged.
+                # Otherwise, return it unchanged
                 return path
         else:
             # The input path is relative so assume it's relative to the current
@@ -61,20 +61,33 @@ def fetch_python_config(config):
     shared_dir = relocate(config_vars.get('LIBDIR', '.'))
     logging.info('  %-24s %s', 'Shared dir', shared_dir)
 
+    # Add first relocated include dirs followed by non-relocated version.
+    # Indeed, when using venv and maybe virtualenv, includes are not copied.
     cflags = "-I" + relocate(python_data['python_inc'])
     if python_data['python_inc'] != python_data['python_inc_plat']:
         cflags += " -I" + relocate(python_data['python_inc_plat'])
+        cflags += " -I" + python_data['python_inc_plat']
+    cflags += " -I" + python_data['python_inc']
+
     logging.info('  %-24s %s', 'CFLAGS', cflags)
 
-    python_libs = [config_vars[v] for v in ("LIBS", "SYSLIBS", "MODLIBS")
-                   if v in config_vars and config_vars[v]]
+    if python_version.startswith('3'):
+        # In python 3.x MODLIBS seems to drag in too many libraries
+        python_libs = [config_vars[v] for v in ("LIBS", "SYSLIBS")
+                       if v in config_vars and config_vars[v]]
+    else:
+        python_libs = [config_vars[v] for v in ("LIBS", "SYSLIBS", "MODLIBS")
+                       if v in config_vars and config_vars[v]]
     python_libs = " ".join(python_libs)
 
     python_shared_libs = "-L%s -lpython%s %s" % (shared_dir,
-                                                 python_version,
+                                                 python_ldversion,
                                                  python_libs)
     python_static_libs = ''
-    libpython_a = os.path.join(static_dir, 'libpython%s.a' % python_version)
+    libpython_a = os.path.join(
+        static_dir,
+        config_vars.get('LIBRARY', 'libpython%s.a' % python_version))
+
     if os.path.isfile(libpython_a):
         python_static_libs = libpython_a + ' ' + python_libs
     if sys.platform.startswith('linux'):
@@ -92,7 +105,7 @@ def fetch_python_config(config):
     # passed to Python's configure during Python build, then we should
     # link with the shared libpython, otherwise with the static one.
     # Indeed otherwise some C modules might not work as expected or even
-    # crash. On windows always link with shared version of libpython
+    # crash. On Windows always link with shared version of libpython
     # (if the static is present, this is just an indirection to the shared)
     if '--enable-shared' in config_vars.get('CONFIG_ARGS', '') or \
             '--enable-framework' in config_vars.get('CONFIG_ARGS', '') or \
@@ -139,7 +152,7 @@ class GNATCollPython(SetupApp):
 
         # Set library version
         with open(os.path.join(config.source_dir, '..',
-                               'version_information'), 'rb') as fd:
+                               'version_information'), 'r') as fd:
             version = fd.read().strip()
         config.set_data('GNATCOLL_VERSION', version, sub='gprbuild')
         logging.info('%-26s %s', 'Version', version)

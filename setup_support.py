@@ -115,7 +115,7 @@ class Config(object):
 
     def init_data(self, args):
         if self.load_cache and os.path.isfile(self.json_cache):
-            with open(self.json_cache, 'rb') as fd:
+            with open(self.json_cache, 'r') as fd:
                 try:
                     data = json.load(fd)
                 except Exception:
@@ -171,7 +171,7 @@ class Config(object):
             self.data[sub][name] = value
 
     def save_data(self):
-        with open(self.json_cache, 'wb') as fd:
+        with open(self.json_cache, 'w') as fd:
             json.dump(self.data, fd)
 
     def gprcmd(self, cmd, project, *args, **kwargs):
@@ -190,12 +190,12 @@ class Config(object):
         # Pass common variables values computed during configure
         # step and stored in setup.json
         if 'gprbuild' in self.data:
-            for name, value in self.data['gprbuild'].iteritems():
+            for name, value in self.data['gprbuild'].items():
                 cmd.append('-X%s=%s' % (name, value))
 
         # Additional scenario variables coming usually from variants
         if 'gpr_vars' in kwargs:
-            for name, value in kwargs['gpr_vars'].iteritems():
+            for name, value in kwargs['gpr_vars'].items():
                 cmd.append('-X%s=%s' % (name, value))
 
         return self.run(*cmd, **kwargs)
@@ -241,7 +241,7 @@ class Config(object):
         assert cmd[0], "cannot find program: %s" % args[0]
 
         if grab:
-            output = check_output(cmd).strip()
+            output = check_output(cmd).decode('utf-8').strip()
             if not isinstance(grab, bool):
                 output = re.findall(grab, output)[0]
             return output
