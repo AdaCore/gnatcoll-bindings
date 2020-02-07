@@ -191,46 +191,23 @@ package GNATCOLL.Python is
    --------------
    -- Integers --
    --------------
-
-   function PyLong_FromLong (Value : Interfaces.C.long) return PyObject
-     with Import, Convention => C, External_Name => "PyLong_FromLong";
-   --  Create a new integer object from its value
-
-   function PyLong_FromSize_t (Value : Interfaces.C.size_t) return PyObject
-     with Import, Convention => C, External_Name => "PyLong_FromSize_t";
-   --  Create a new integer object from Value
-
-   function PyLong_AsLong (Int : PyObject) return Interfaces.C.long
-     with Import, Convention => C, External_Name => "PyLong_AsLong";
-   --  Return the value of Int.
-   --  Return -1 and set PyErr_Occurred if Int is not an integer object.
-
-   function PyLong_Check (Obj : PyObject) return Boolean
-     with Inline;
-   --  Returns true if the Obj is an integer object
-
    --  Not bound: PyInt_FromString and PyInt_FromUnicode
 
    function PyInt_FromLong (Value : Interfaces.C.long) return PyObject;
    --  Create a new integer object from its value
-   --  Python3 removes this function. Use PyLong_FromLong instead.
 
    function PyInt_FromSize_t (Value : Interfaces.C.size_t) return PyObject;
    --  Create a new integer object from Value
-   --  Python3 removes this function. Use PyLong_FromSize_t instead.
 
    function PyInt_AsLong (Int : PyObject) return Interfaces.C.long;
    --  Return the value of Int.
    --  Return -1 and set PyErr_Occurred if Int is not an integer object.
-   --  Python3 removes this function. Use PyLong_AsLong instead.
 
    function PyInt_GetMax return Interfaces.C.long;
    --  Return the maximum value an integer can have
-   --  Python3 removes this function. It has no PyLong equivalent.
 
    function PyInt_Check (Obj : PyObject) return Boolean;
    --  Returns true if the Obj is an integer object
-   --  Python3 removes this function. Use PyLong_Check instead.
 
    ------------
    -- Floats --
@@ -876,7 +853,6 @@ package GNATCOLL.Python is
 
    function PyFile_FromString (File_Name, Mode : String) return PyObject;
    --  Create an instance of file.
-   --  Python3 removes this function. Use "io.open()" instead.
 
    -----------------
    -- Class types --

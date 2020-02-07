@@ -235,7 +235,7 @@ static PyObject * adamethod_descr_get
                  "doesn't apply to '%s' object",
                  PyDescr_NAME(descr), "?",
                  PyDescr_TYPE(descr)->tp_name,
-                 Py_TYPE(obj)->tp_name);
+                 obj->ob_type->tp_name);
     return NULL;
   }
   return PyMethod_New (descr->cfunc, obj);
@@ -306,7 +306,7 @@ void ada_py_add_method
 int
 ada_pyget_refcount (PyObject* obj)
 {
-   return Py_REFCNT(obj);
+   return obj->ob_refcnt;
 }
 
 char*
@@ -315,7 +315,7 @@ ada_py_refcount_msg (PyObject* obj)
    static char msg[200];
    if (obj) {
       snprintf (msg, 199, "%p (%s, rc=%ld)",
-                obj, Py_TYPE(obj)->tp_name, Py_REFCNT(obj));
+                obj, obj->ob_type->tp_name, obj->ob_refcnt);
    } else {
       msg[0] = '\0';
    }
@@ -388,14 +388,25 @@ ada_pystring_check (PyObject* obj)
 PyObject* ada_PyUnicode_AsEncodedString
   (PyObject *unicode, const char *encoding, const char *errors)
 {
-  //  A macro in python2.
-  return PyUnicode_AsEncodedString (unicode, encoding, errors);
+#ifdef Py_UNICODE_WIDE
+  return PyUnicodeUCS4_AsEncodedString (unicode, encoding, errors);
+#else
+  return PyUnicodeUCS2_AsEncodedString (unicode, encoding, errors);
+#endif
 }
 
 PyObject* ada_PyUnicode_FromString (const char *u)
 {
-  //  A macro in python2.
-  return PyUnicode_FromString (u);
+#if PY_VERSION_HEX >= 0x02060000
+#ifdef Py_UNICODE_WIDE
+  return PyUnicodeUCS4_FromString (u);
+#else
+  return PyUnicodeUCS2_FromString (u);
+#endif
+#else
+  /* Not available in this version */
+  return 0;
+#endif
 }
 
 int
@@ -408,17 +419,10 @@ int
 ada_pyint_check (PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
-  //  Not available anymore.
   return PyLong_Check (obj);
 #else
-  //  May be a macro.
   return PyInt_Check (obj);
 #endif
-}
-
-//  May be a macro.
-PyAPI_FUNC(int) ada_pylong_check (PyObject* obj) {
-  return PyLong_Check (obj);
 }
 
 int
@@ -593,7 +597,7 @@ ada_pymethod_check (PyObject* obj)
 PyTypeObject*
 ada_gettypeobject (PyObject* obj)
 {
-  return (PyTypeObject*)(Py_TYPE(obj));
+  return (PyTypeObject*)(obj->ob_type);
 }
 
 char*
@@ -858,10 +862,6 @@ PyAPI_FUNC(PyObject *) PyInt_FromLong(long val) {
    return PyLong_FromLong(val);
 };
 
-PyAPI_FUNC(PyObject *) PyInt_FromSize_t(size_t val) {
-   return PyLong_FromSize_t(val);
-};
-
 PyAPI_FUNC(long) PyInt_AsLong(PyObject * val) {
    return PyLong_AsLong(val);
 };
@@ -885,16 +885,6 @@ PyAPI_FUNC(PyObject *) PyCObject_FromVoidPtr(
          "GNATCOLL._C_API" /* name */,
          (PyCapsule_Destructor) destruct);
 };
-
-PyAPI_FUNC(PyObject *) PyFile_FromString
-  (const char *file_name, const char *mode)
-{
-  PyObject * io = PyImport_ImportModule ("io");
-  if (io == NULL) {
-    return NULL;
-  }
-  return PyObject_CallMethod (io, "open", "ss", file_name, mode);
-}
 
 #else
 int ada_is_python3() {
