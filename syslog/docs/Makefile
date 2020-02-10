@@ -1,0 +1,1 @@
+include ../../docs-common/Makefile

@@ -27,4 +27,6 @@ lib/
 setup.json
 /gnat_src
 
+*/docs/_build
+
 examples/library/obj
