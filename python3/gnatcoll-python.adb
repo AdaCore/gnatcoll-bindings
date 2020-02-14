@@ -263,8 +263,8 @@ package body GNATCOLL.Python is
    ------------------
 
    function PyLong_Check (Obj : PyObject) return Boolean is
-      function Internal (Obj : PyObject) return Integer
-        with Import, Convention => C, External_Name => "ada_pylong_check";
+      function Internal (Obj : PyObject) return Integer;
+      pragma Import (C, Internal, "ada_pylong_check");
    begin
       return Internal (Obj) = 1;
    end PyLong_Check;

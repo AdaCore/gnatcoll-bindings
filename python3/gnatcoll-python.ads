@@ -192,16 +192,16 @@ package GNATCOLL.Python is
    -- Integers --
    --------------
 
-   function PyLong_FromLong (Value : Interfaces.C.long) return PyObject
-     with Import, Convention => C, External_Name => "PyLong_FromLong";
+   function PyLong_FromLong (Value : Interfaces.C.long) return PyObject;
+   pragma Import (C, PyLong_FromLong, "PyLong_FromLong");
    --  Create a new integer object from its value
 
-   function PyLong_FromSize_t (Value : Interfaces.C.size_t) return PyObject
-     with Import, Convention => C, External_Name => "PyLong_FromSize_t";
+   function PyLong_FromSize_t (Value : Interfaces.C.size_t) return PyObject;
+   pragma Import (C, PyLong_FromSize_t, "PyLong_FromSize_t");
    --  Create a new integer object from Value
 
-   function PyLong_AsLong (Int : PyObject) return Interfaces.C.long
-     with Import, Convention => C, External_Name => "PyLong_AsLong";
+   function PyLong_AsLong (Int : PyObject) return Interfaces.C.long;
+   pragma Import (C, PyLong_AsLong, "PyLong_AsLong");
    --  Return the value of Int.
    --  Return -1 and set PyErr_Occurred if Int is not an integer object.
 
