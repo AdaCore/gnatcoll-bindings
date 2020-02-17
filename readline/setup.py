@@ -32,7 +32,7 @@ class GNATCollReadline(SetupApp):
 
         # Set library version
         with open(os.path.join(config.source_dir, '..',
-                               'version_information'), 'rb') as fd:
+                               'version_information'), 'r') as fd:
             version = fd.read().strip()
         config.set_data('GNATCOLL_VERSION', version, sub='gprbuild')
 
