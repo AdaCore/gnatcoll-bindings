@@ -22,7 +22,7 @@
 ------------------------------------------------------------------------------
 
 --  Standard interface to the python interpreter.
---  This requires at least python 2.3 to be installed on your system.
+--  This requires at least python 3.7 to be installed on your system.
 
 with Ada.Unchecked_Conversion;
 with Interfaces.C.Strings;

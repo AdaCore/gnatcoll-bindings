@@ -3,8 +3,8 @@ The GNAT Components Collection (GNATCOLL) - Python
 
 This is the Python component of the GNAT Components Collection.
 
-Standard interface to the Python 2 interpreter. NOTE: This binding is not
-compatible with Python 3.
+Standard interface to the Python 3 interpreter. NOTE: This binding is not
+compatible with Python 2.
 
 Dependencies
 ------------
@@ -14,8 +14,8 @@ available on your system:
 
 - gprbuild
 - gnatcoll-core
-- Python 2, at least version 2.3, but the most recent available version of
-  Python 2 from ww.python.org is recommended.
+- Python 3, at least version 3.7, but the most recent available version of
+  Python 3 from www.python.org is recommended.
 
 NOTE for Windows users: if you are installing the official distrib, you should
 install it in "just for me" mode, otherwise the python DLL will be placed in
