@@ -37,29 +37,20 @@
 #undef DEBUG
 /* #define DEBUG */
 
-#if PY_MAJOR_VERSION >= 3
 #ifndef PyDescr_TYPE
 #define PyDescr_TYPE(x) (((PyDescrObject *)(x))->d_type)
 #define PyDescr_NAME(x) (((PyDescrObject *)(x))->d_name)
-
-#endif
-
 #endif
 
 /*****************************************************************************
  * Modules
  *****************************************************************************/
 
-#if PY_MAJOR_VERSION >= 3
 PyMODINIT_FUNC
-#else
-PyObject *
-#endif
 ada_Py_InitModule4
   (char *name, PyMethodDef *methods,
    char *doc, PyObject *self)
 {
-#if PY_MAJOR_VERSION >= 3
    struct PyModuleDef def = {
      PyModuleDef_HEAD_INIT,
      name,                /* m_name */
@@ -79,12 +70,8 @@ ada_Py_InitModule4
    mod = PyModule_Create(module);
 
    return imported;
-#else
-   return Py_InitModule4 (name, methods, doc, self, PYTHON_API_VERSION);
-#endif
 }
 
-#if PY_MAJOR_VERSION >= 3
 // The definition of the module the user is creating via GNATCOLL.
 // There is a single such module, so it is simpler to declare the
 // variable as static rather than use calls to malloc().
@@ -102,7 +89,6 @@ static struct PyModuleDef user_module = {
      NULL,                /* m_clear */
      NULL                 /* m_free */
 };
-#endif
 
 static char* user_module_name;
 
@@ -110,11 +96,7 @@ PyMODINIT_FUNC
 init_user_module(void) {
    //struct PyModuleDef* module = (struct PyModuleDef*)malloc(sizeof(def));
    //memcpy(module, &def, sizeof(struct PyModuleDef));
-#if PY_MAJOR_VERSION >= 3
    return PyModule_Create(&user_module);
-#else
-   Py_InitModule4 (user_module_name, NULL, "", NULL, PYTHON_API_VERSION);
-#endif
 };
 
 //  To hide the output, we also need to rewrite displayhook.
@@ -131,12 +113,8 @@ ada_py_initialize_and_module(char* program_name, char* name) {
 
    user_module_name = strdup(name);
 
-#if PY_MAJOR_VERSION >= 3
    user_module.m_name = user_module_name;
    Py_SetProgramName ((wchar_t*)program_name);
-#else
-   Py_SetProgramName (program_name);
-#endif
 
    PyImport_AppendInittab(user_module_name, init_user_module);
    Py_InitializeEx(0);
@@ -206,8 +184,6 @@ ada_py_initialize_and_module(char* program_name, char* name) {
  *     same 'self' argument (the data Ada itself provided).
  ************************************************************************/
 
-#if PY_MAJOR_VERSION >= 3
-
 typedef struct {
   PyDescr_COMMON;
   PyObject*  cfunc;   // An instance of PyCFunction, bound with the
@@ -274,8 +250,6 @@ PyDescr_NewAdaMethod(PyTypeObject *type, PyObject* cfunc, const char* name)
   return (PyObject *)descr;
 }
 
-#endif  /* python 3.x */
-
 // Adds a new method to the class 'class'.
 // 'module' is the module to which the class belongs, and is used to set
 //    the __module__ attribute of the new method.
@@ -290,12 +264,8 @@ void ada_py_add_method
   PyObject* cfunc = PyCFunction_NewEx
     (def, data, PyUnicode_FromString (PyModule_GetName (module)));
 
-#if PY_MAJOR_VERSION >= 3
   PyObject* method = PyDescr_NewAdaMethod
     ((PyTypeObject*)class, cfunc, def->ml_name);
-#else
-  PyObject* method = PyMethod_New (cfunc, NULL, class);
-#endif
 
   PyObject_SetAttrString (class, def->ml_name, method);
   Py_DECREF (method);
@@ -368,21 +338,13 @@ ada_py_xdecref (PyObject* obj)
 int
 ada_pybasestring_check (PyObject* obj)
 {
-#if PY_MAJOR_VERSION >= 3
   return PyUnicode_Check (obj);
-#else
-  return PyString_Check (obj) || PyUnicode_Check (obj);
-#endif
 }
 
 int
 ada_pystring_check (PyObject* obj)
 {
-#if PY_MAJOR_VERSION >= 3
   return PyUnicode_Check (obj);
-#else
-  return PyString_Check (obj);
-#endif
 }
 
 PyObject* ada_PyUnicode_AsEncodedString
@@ -407,13 +369,8 @@ ada_pyunicode_check (PyObject* obj)
 int
 ada_pyint_check (PyObject* obj)
 {
-#if PY_MAJOR_VERSION >= 3
   //  Not available anymore.
   return PyLong_Check (obj);
-#else
-  //  May be a macro.
-  return PyInt_Check (obj);
-#endif
 }
 
 //  May be a macro.
@@ -511,11 +468,7 @@ PyObject* ada_PyEval_EvalCodeEx
 
   if (kwds != NULL && PyDict_Check(kwds)) {
      int i = 0;
-#if PY_MAJOR_VERSION > 2 || (PY_MAJOR_VERSION==2 && PY_MINOR_VERSION>=5)
      Py_ssize_t pos = 0;
-#else
-     int pos = 0;
-#endif
 
      nk = PyDict_Size(kwds);
      kwtuple = PyTuple_New(2*nk);
@@ -534,7 +487,6 @@ PyObject* ada_PyEval_EvalCodeEx
      nk = 0;
   }
 
-#if PY_MAJOR_VERSION >= 3
   result = (PyObject*) PyEval_EvalCodeEx
     ((PyObject*) co,
      globals, locals,
@@ -543,14 +495,6 @@ PyObject* ada_PyEval_EvalCodeEx
      d /* defs */, nd /* defcount */,
      NULL, /* kwdefs */
      closure /* closure */);
-#else
-  result = (PyObject*) PyEval_EvalCodeEx
-    (co, globals, locals,
-     &PyTuple_GET_ITEM (args, 0) /* args */, PyTuple_Size (args) /* argc*/,
-     k /* kwds */, nk /* kwdc */,
-     d /* defs */, nd /* defcount */,
-     closure /* closure */);
-#endif
 
   Py_XDECREF (kwtuple);
   return result;
@@ -559,11 +503,7 @@ PyObject* ada_PyEval_EvalCodeEx
 int
 ada_pycobject_check (PyObject* obj)
 {
-#if PY_MAJOR_VERSION >= 3
   return PyCapsule_CheckExact (obj);
-#else
-  return PyCObject_Check (obj);
-#endif
 }
 
 int
@@ -717,11 +657,7 @@ ada_type_new (PyTypeObject* meta, char* name, PyObject* bases, PyObject* dict)
   args   = PyTuple_New (3);
   kwargs = PyDict_New ();
 
-#if PY_MAJOR_VERSION >= 3
   str = PyUnicode_FromString (name);
-#else
-  str = PyString_FromString (name);
-#endif
 
   PyTuple_SET_ITEM (args, 0, str);    /* steal reference to str */
 
@@ -823,26 +759,16 @@ ada_is_subclass (PyObject* class, PyObject* base)
 }
 
 const char* ada_py_builtin() {
-#if PY_MAJOR_VERSION >= 3
    return "builtins";
-#else
-   return "__builtin__";
-#endif
 }
 
 const char* ada_py_builtins() {
-#if PY_MAJOR_VERSION >= 3
    return "__builtins__";
-#else
-   return "__builtins__";
-#endif
 }
 
 /* Result value must be freed */
 
 PyAPI_FUNC(const char *) ada_PyString_AsString(PyObject * val) {
-
-#if PY_MAJOR_VERSION >= 3
 
    PyObject* utf8 = PyUnicode_AsUTF8String(val);
    char* tmp = PyBytes_AsString (utf8);
@@ -850,14 +776,7 @@ PyAPI_FUNC(const char *) ada_PyString_AsString(PyObject * val) {
    Py_XDECREF(utf8);
    return str;
 
-#else
-   char * str = PyString_AsString(val);
-   return strdup(str);
-#endif
 };
-
-
-#if PY_MAJOR_VERSION >= 3
 
 int ada_is_python3() {
   return 1;
@@ -904,12 +823,6 @@ PyAPI_FUNC(PyObject *) PyFile_FromString
   }
   return PyObject_CallMethod (io, "open", "ss", file_name, mode);
 }
-
-#else
-int ada_is_python3() {
-  return 0;
-}
-#endif
 
 PyCodeObject*
 ada_pyframe_get_code (PyFrameObject* obj)
