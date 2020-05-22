@@ -23,7 +23,6 @@
 
 with System;               use System;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
-with GNAT.OS_Lib;          use GNAT.OS_Lib;
 
 package body GNATCOLL.Python is
 
@@ -516,38 +515,6 @@ package body GNATCOLL.Python is
    begin
       return Internal (Object, Name & ASCII.NUL, Arg1);
    end PyObject_CallMethod;
-
-   -----------------------
-   -- Py_SetProgramName --
-   -----------------------
-
-   procedure Py_SetProgramName (Name : String) is
-      procedure Internal (Name : String);
-      pragma Import (C, Internal, "Py_SetProgramName");
-
-      Program_Name : constant String_Access := new String'(Name & ASCII.NUL);
-      --  As stated by the Python documentation the string passed to
-      --  Py_SetProgramName should be in "static storage whose contents will
-      --  not change for the duration of the program's execution"
-   begin
-      Internal (Program_Name.all);
-   end Py_SetProgramName;
-
-   ----------------------
-   -- Py_SetPythonHome --
-   ----------------------
-
-   procedure Py_SetPythonHome (Home : String) is
-      procedure Internal (Name : String);
-      pragma Import (C, Internal, "Py_SetPythonHome");
-
-      C_Home : constant String_Access := new String'(Home & ASCII.NUL);
-      --  As stated by the Python documentation the string passed to
-      --  Py_SetPythonHome should be in "static storage whose contents will
-      --  not change for the duration of the program's execution"
-   begin
-      Internal (C_Home.all);
-   end Py_SetPythonHome;
 
    ----------------------
    -- Py_CompileString --
@@ -1085,17 +1052,6 @@ package body GNATCOLL.Python is
       end if;
       return null;
    end Lookup_Object;
-
-   -------------
-   -- Py_Main --
-   -------------
-
-   function Py_Main return Integer is
-      function Internal return Integer;
-      pragma Import (C, Internal, "ada_py_main");
-   begin
-      return Internal;
-   end Py_Main;
 
    ---------------------
    -- PyCObject_Check --

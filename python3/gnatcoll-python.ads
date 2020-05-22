@@ -36,22 +36,6 @@ package GNATCOLL.Python is
    procedure Py_Finalize;
    --  Finalize the python interpreter
 
-   procedure Py_SetProgramName (Name : String);
-   --  Set the program name. This must be called before Py_Initialize
-   --  Python also uses the argument to locate its standard library:
-   --   1- If PYTHONHOME environment variable is set then it points to the
-   --      library location prefix,
-   --   2- Otherwise, set library prefix to a location relative to program
-   --      called Name.
-   --   3- If the prefix cannot be found using the previous methods, use
-   --      the value of prefix set by configure during Python build.
-   --  Name should therefore point to the current executable so that if you
-   --  provide your own python installation it gets detected by default.
-
-   procedure Py_SetPythonHome (Home : String);
-   --  Set the default "home" directory, that is, the location of the standard
-   --  Python libraries. The libraries are searched in Home/lib/pythonversion.
-
    -------------
    -- Objects --
    -------------
@@ -1053,9 +1037,6 @@ package GNATCOLL.Python is
    --  Evaluate a precompiled code object. This is mostly used to execute a
    --  function (get its code with PyFunction_Get_Code), specifying some of
    --  the parameters
-
-   function Py_Main return Integer;
-   --  Run the python interpreter main program
 
    --------------------------------------
    -- Evaluating and Tracing execution --

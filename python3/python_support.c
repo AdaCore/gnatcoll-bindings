@@ -674,13 +674,22 @@ extern int gnat_argc;
 extern char **gnat_argv;
 
 int
-ada_py_main ()
+__gnatcoll_py_main ()
 {
-#if PY_MAJOR_VERSION >= 3
-  return Py_Main (gnat_argc, (wchar_t**) gnat_argv);
-#else
-  return Py_Main (gnat_argc, (char**) gnat_argv);
-#endif
+  wchar_t *w_gnat_argv[gnat_argc];
+  int result;
+
+  for (int i=0; i<gnat_argc; i++) {
+    w_gnat_argv[i] = Py_DecodeLocale(gnat_argv[i], NULL);
+  }
+
+  result = Py_Main (gnat_argc, w_gnat_argv);
+
+  for (int i=0; i<gnat_argc; i++) {
+    PyMem_RawFree((void *) w_gnat_argv[i]);
+  }
+
+  return result;
 }
 
 PyObject*

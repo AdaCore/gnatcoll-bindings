@@ -30,12 +30,16 @@ with Interfaces.C.Strings;       use Interfaces.C, Interfaces.C.Strings;
 with GNAT.IO;                    use GNAT.IO;
 with GNAT.Strings;               use GNAT.Strings;
 with GNATCOLL.Any_Types.Python;
+with GNATCOLL.Python.Lifecycle;
 with GNATCOLL.Scripts.Impl;      use GNATCOLL.Scripts, GNATCOLL.Scripts.Impl;
 with GNATCOLL.Traces;            use GNATCOLL.Traces;
 with System;                     use System;
 with System.Storage_Elements;    use System.Storage_Elements;
 
 package body GNATCOLL.Scripts.Python is
+
+   package Lifecycle renames GNATCOLL.Python.Lifecycle;
+
    Me       : constant Trace_Handle := Create ("PYTHON");
    Me_Error : constant Trace_Handle := Create ("PYTHON.ERROR", On);
    Me_Stack : constant Trace_Handle := Create ("PYTHON.TB", Off);
@@ -553,7 +557,7 @@ package body GNATCOLL.Scripts.Python is
       --  Set the program name and python home
 
       if Python_Home /= "" then
-         Py_SetPythonHome (Python_Home);
+         Lifecycle.Py_SetPythonHome (Python_Home);
       end if;
 
       Script.Module := Initialize_Py_And_Module
