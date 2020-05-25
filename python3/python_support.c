@@ -114,7 +114,7 @@ ada_py_initialize_and_module(char* program_name, char* name) {
    user_module_name = strdup(name);
 
    user_module.m_name = user_module_name;
-   Py_SetProgramName ((wchar_t*)program_name);
+   Py_SetProgramName (Py_DecodeLocale (program_name, NULL));
 
    PyImport_AppendInittab(user_module_name, init_user_module);
    Py_InitializeEx(0);
