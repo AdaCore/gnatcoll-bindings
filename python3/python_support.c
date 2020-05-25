@@ -778,10 +778,6 @@ PyAPI_FUNC(const char *) ada_PyString_AsString(PyObject * val) {
 
 };
 
-int ada_is_python3() {
-  return 1;
-}
-
 PyAPI_FUNC(PyObject *) PyInt_FromLong(long val) {
    return PyLong_FromLong(val);
 };

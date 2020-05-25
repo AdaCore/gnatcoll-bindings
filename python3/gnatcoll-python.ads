@@ -808,9 +808,6 @@ package GNATCOLL.Python is
    --  Set the current exception as a "bad argument" exception. The function
    --  should also return null to its caller.
 
-   function PyErr_Occurred return PyObject;
-   --  Return the current exception, or null if no exception was raised
-
    function PyErr_NewException
      (Name : String; Base : PyObject := null; Dict : PyObject := null)
      return PyObject;
@@ -1196,7 +1193,6 @@ private
    pragma Import (C, PyInt_AsLong, "PyInt_AsLong");
    pragma Import (C, PyFloat_AsDouble, "PyFloat_AsDouble");
    pragma Import (C, PyInt_GetMax, "PyInt_GetMax");
-   pragma Import (C, PyErr_Occurred, "PyErr_Occurred");
    pragma Import (C, PyList_New, "PyList_New");
    pragma Import (C, PyList_Append, "PyList_Append");
    pragma Import (C, PyErr_BadArgument, "PyErr_BadArgument");

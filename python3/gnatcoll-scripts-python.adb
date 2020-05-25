@@ -31,6 +31,7 @@ with GNAT.IO;                    use GNAT.IO;
 with GNAT.Strings;               use GNAT.Strings;
 with GNATCOLL.Any_Types.Python;
 with GNATCOLL.Python.Lifecycle;
+with GNATCOLL.Python.Errors;
 with GNATCOLL.Scripts.Impl;      use GNATCOLL.Scripts, GNATCOLL.Scripts.Impl;
 with GNATCOLL.Traces;            use GNATCOLL.Traces;
 with System;                     use System;
@@ -39,6 +40,7 @@ with System.Storage_Elements;    use System.Storage_Elements;
 package body GNATCOLL.Scripts.Python is
 
    package Lifecycle renames GNATCOLL.Python.Lifecycle;
+   package PyErr renames GNATCOLL.Python.Errors;
 
    Me       : constant Trace_Handle := Create ("PYTHON");
    Me_Error : constant Trace_Handle := Create ("PYTHON.ERROR", On);
@@ -53,11 +55,6 @@ package body GNATCOLL.Scripts.Python is
    pragma Import (C, Ada_Py_Builtin, "ada_py_builtin");
    function Ada_Py_Builtins return Interfaces.C.Strings.chars_ptr;
    pragma Import (C, Ada_Py_Builtins, "ada_py_builtins");
-
-   function Ada_Is_Python3 return Integer;
-   pragma Import (C, Ada_Is_Python3, "ada_is_python3");
-
-   Is_Python3 : constant Boolean := Ada_Is_Python3 = 1;
 
    Builtin_Name : constant String := Value (Ada_Py_Builtin);
    Builtins_Name : constant String := Value (Ada_Py_Builtins);
@@ -1683,7 +1680,7 @@ package body GNATCOLL.Scripts.Python is
          Script.Use_Secondary_Prompt := Indented_Input;
 
          if not Script.Use_Secondary_Prompt then
-            if PyErr_Occurred /= null then
+            if PyErr.PyErr_Occurred /= null then
                PyErr_Fetch (Typ, Occurrence, Traceback);
                PyErr_NormalizeException (Typ, Occurrence, Traceback);
 
@@ -2152,16 +2149,10 @@ package body GNATCOLL.Scripts.Python is
       --  The call to compile is only necessary to get an error message
       --  pointing back to Filename
 
-      if Is_Python3 then
-         Execute_Command
-           (Script, Create ("exec(compile(open(r'" & Filename
-                            & "').read(),r'" & Filename & "','exec'))"),
-            Console, Hide_Output, Show_Command, Errors);
-      else
-         Execute_Command
-           (Script, Create ("execfile(r'" & Filename & "')"),
-            Console, Hide_Output, Show_Command, Errors);
-      end if;
+      Execute_Command
+        (Script, Create ("exec(compile(open(r'" & Filename
+                         & "').read(),r'" & Filename & "','exec'))"),
+         Console, Hide_Output, Show_Command, Errors);
 
       Script.Current_File := Null_Unbounded_String;
    end Execute_File;
