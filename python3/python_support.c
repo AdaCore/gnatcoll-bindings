@@ -335,6 +335,12 @@ ada_py_xdecref (PyObject* obj)
   Py_XDECREF (obj);
 }
 
+PyTypeObject*
+__gnatcoll_py_type(PyObject *obj)
+{
+  return (PyTypeObject*) (Py_TYPE (obj));
+}
+
 int
 ada_pybasestring_check (PyObject* obj)
 {
@@ -528,12 +534,6 @@ int
 ada_pymethod_check (PyObject* obj)
 {
   return PyMethod_Check (obj);
-}
-
-PyTypeObject*
-ada_gettypeobject (PyObject* obj)
-{
-  return (PyTypeObject*)(Py_TYPE(obj));
 }
 
 char*

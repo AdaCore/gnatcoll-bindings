@@ -34,8 +34,8 @@ package GNATCOLL.Python is
    -- Objects --
    -------------
 
-   type Dummy is limited private;
-   type PyObject is access Dummy;
+   type PyObject_Opaque is limited private;
+   type PyObject is access all PyObject_Opaque;
    pragma Convention (C, PyObject);
 
    type PyObject_Array is array (Natural range <>) of PyObject;
@@ -712,8 +712,8 @@ package GNATCOLL.Python is
    --  The internal structure that describes a Python type (and all the default
    --  primitive subprograms like __getattr__, __setattr__, ...
 
-   function GetTypeObject (Obj : PyObject) return PyTypeObject;
-   --  Return the type object that describes the class Obj belongs to
+   function Py_TYPE (Obj : PyObject) return PyTypeObject;
+   --  Return the type object of a given object.
 
    function Name (Obj : PyTypeObject) return String;
    --  Name of type, useful for printing, in format "<module>.<name>"
@@ -1136,7 +1136,7 @@ package GNATCOLL.Python is
 
 private
 
-   type Dummy is null record;
+   type PyObject_Opaque is null record;
 
    type Interpreter_State is new Integer;
 
@@ -1214,7 +1214,6 @@ private
    pragma Import (C, PyFunction_Get_Globals, "ada_pyfunction_get_globals");
    pragma Import (C, PyFunction_Get_Closure, "ada_pyfunction_get_closure");
    pragma Import (C, PyFunction_Get_Defaults, "ada_pyfunction_get_defaults");
-   pragma Import (C, GetTypeObject, "ada_gettypeobject");
    pragma Inline (PyCObject_Check);
    pragma Import (C, PyCObject_FromVoidPtr, "PyCObject_FromVoidPtr");
    pragma Import
@@ -1228,5 +1227,5 @@ private
    pragma Import (C, PyFrame_Get_Back, "ada_pyframe_get_back");
    pragma Import (C, PyCode_Get_Filename, "ada_pycode_get_filename");
    pragma Import (C, PyCode_Get_Name, "ada_pycode_get_name");
-
+   pragma Import (C, Py_TYPE, "__gnatcoll_py_type");
 end GNATCOLL.Python;
