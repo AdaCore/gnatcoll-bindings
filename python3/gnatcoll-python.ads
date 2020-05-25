@@ -30,12 +30,6 @@ with System;
 
 package GNATCOLL.Python is
 
-   procedure Py_Initialize;
-   --  Initialize the python interpreter. You must call Py_SetProgramName first
-
-   procedure Py_Finalize;
-   --  Finalize the python interpreter
-
    -------------
    -- Objects --
    -------------
@@ -1179,8 +1173,6 @@ private
    pragma Inline (PyUnicode_Check);
    pragma Inline (PyInt_Check);
    pragma Inline (PyFloat_Check);
-   pragma Import (C, Py_Initialize, "Py_Initialize");
-   pragma Import (C, Py_Finalize, "Py_Finalize");
    pragma Import (C, PyModule_GetDict, "PyModule_GetDict");
    pragma Import (C, Py_INCREF, "ada_py_incref");
    pragma Import (C, Py_DECREF, "ada_py_decref");

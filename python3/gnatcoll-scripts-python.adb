@@ -513,7 +513,7 @@ package body GNATCOLL.Scripts.Python is
          Finalized := True;
          Set_Default_Console (Script, null);
          Free (Script.Buffer);
-         Py_Finalize;
+         Lifecycle.Py_Finalize;
       end if;
    end Destroy;
 

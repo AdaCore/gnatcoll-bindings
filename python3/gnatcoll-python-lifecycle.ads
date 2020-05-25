@@ -70,6 +70,36 @@ package GNATCOLL.Python.Lifecycle is
    --  Same as previous procedure except that the procedure use
    --  Ada.Commmand_Line.Command_Name as Name.
 
+   procedure Py_Initialize (Initialize_Signal_Handlers : Boolean := True);
+   --  Initialize the Python interpreter. In an application embedding Python,
+   --  this should be called before using any other Python/C API functions.
+   --  For the few exceptions see Python documentation.
+
+   --  This initializes the table of loaded modules (sys.modules), and creates
+   --  the fundamental modules builtins, __main__ and sys. It also initializes
+   --  the module search path (sys.path). It does not set sys.argv; use
+   --  PySys_SetArgvEx() for that. This is a no-op when called for a second
+   --  time (without calling Py_FinalizeEx() first). There is no return value;
+   --  it is a fatal error if the initialization fails.
+
+   --  If Initialize_Signal_Handlers is set to True (default) the
+   --  initialization performs the registration of the signal handlers.
+   --  If not, it skipsregistration of signal handlers, which might be useful
+   --  when Python is embedded.
+
+   procedure Py_Finalize;
+   pragma Import (C, Py_Finalize, "Py_Finalize");
+   --  Undo all initializations made by Py_Initialize() and subsequent use of
+   --  Python/C API functions, and destroy all sub-interpreters (see
+   --  Py_NewInterpreter() below) that were created and not yet destroyed since
+   --  the last call to Py_Initialize(). Ideally, this frees all memory
+   --  allocated by the Python interpreter. This is a no-op when called for a
+   --  second time (without calling Py_Initialize() again first).
+
+   function Py_Finalize return Boolean;
+   --  Same as previous function but return True if finalization managed to
+   --  free all the memory buffers. Return False otherwise.
+
    type Interpreter_Status is private;
 
    Interpreter_Exit_Normally : constant Interpreter_Status;

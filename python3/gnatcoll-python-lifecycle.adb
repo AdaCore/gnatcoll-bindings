@@ -28,6 +28,33 @@ package body GNATCOLL.Python.Lifecycle is
 
    package Fileutils renames GNATCOLL.Python.Fileutils;
 
+   -----------------
+   -- Py_Finalize --
+   -----------------
+
+   function Py_Finalize return Boolean is
+      function Internal return Integer;
+      pragma Import (C, Internal, "Py_FinalizeEx");
+
+   begin
+      return Internal = 0;
+   end Py_Finalize;
+
+   -------------------
+   -- Py_Initialize --
+   -------------------
+
+   procedure Py_Initialize (Initialize_Signal_Handlers : Boolean := True) is
+      procedure Internal (Init_Sigs : Integer);
+      pragma Import (C, Internal, "Py_InitializeEx");
+   begin
+      if Initialize_Signal_Handlers then
+         Internal (Init_Sigs => 1);
+      else
+         Internal (Init_Sigs => 0);
+      end if;
+   end Py_Initialize;
+
    ----------------------
    -- Py_SetPythonHome --
    ----------------------
