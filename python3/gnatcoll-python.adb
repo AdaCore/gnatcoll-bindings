@@ -922,12 +922,23 @@ package body GNATCOLL.Python is
       Result : Integer;
       pragma Unreferenced (Result);
    begin
-      Def.Flags := Def.Flags or METH_STATIC;
+      if Self = null then
+         --  Declare the method static only if self is set to null. If the
+         --  function is declared METH_STATIC self will never be passed.
+         --  GNATCOLL.Scripts.Python uses self to pass user data to the
+         --  called function (i.e: to simulate a closure).
+         --  WARNING: There is no warranty that in future Python version this
+         --  will work as expected.
+         Def.Flags := Def.Flags or METH_STATIC;
+      end if;
 
       C_Func := PyCFunction_New
         (Def, Self, PyString_FromString (PyModule_Getname (Module)));
+
       if C_Func /= null then
-         --  ??? Likely not needed for python3
+         --  The PyStaticMeThod_New does not seems to be mandatory and not
+         --  documented in the public API, but still used internally by
+         --  Python 3.8.x. Does it play a role regarding memory ?
          Static := PyStaticMethod_New (C_Func);
          Result := PyObject_SetAttrString (Class, Func.Name, Static);
          Py_DECREF (Static);

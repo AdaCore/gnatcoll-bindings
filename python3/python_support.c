@@ -771,7 +771,7 @@ PyAPI_FUNC(PyObject *) PyString_FromStringAndSize(
 };
 
 PyAPI_FUNC(void *) PyCObject_AsVoidPtr(PyObject * val) {
-   void* data = PyCapsule_GetPointer(val, "GNATCOLL._C_API");
+   void* data = PyCapsule_GetPointer(val, NULL);
    return data;
 };
 
@@ -780,7 +780,7 @@ PyAPI_FUNC(PyObject *) PyCObject_FromVoidPtr(
 {
    return PyCapsule_New(
          cobj /* pointer */,
-         "GNATCOLL._C_API" /* name */,
+         NULL /* name */,
          (PyCapsule_Destructor) destruct);
 };
 
