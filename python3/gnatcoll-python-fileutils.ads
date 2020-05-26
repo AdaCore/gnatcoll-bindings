@@ -27,7 +27,7 @@ with GNATCOLL.Python.Ctypes;
 
 package GNATCOLL.Python.Fileutils is
 
-   package C renames GNATCOLL.Python.CTypes;
+   package C renames GNATCOLL.Python.Ctypes;
 
    function Py_DecodeLocale (Arg : String) return C.WChar_Addr;
    --  Decode a byte string from the locale encoding with the surrogateescape

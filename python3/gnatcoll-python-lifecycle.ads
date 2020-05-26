@@ -23,11 +23,11 @@
 
 --  Bindings to functions controlling the interpreter lifecycle
 
-with GNATCOLL.Python.CTypes;
+with GNATCOLL.Python.Ctypes;
 
 package GNATCOLL.Python.Lifecycle is
 
-   package C renames GNATCOLL.Python.CTypes;
+   package C renames GNATCOLL.Python.Ctypes;
 
    procedure Py_SetPythonHome (Home : C.WChar_Addr);
    pragma Import (C, Py_SetPythonHome, "Py_SetPythonHome");

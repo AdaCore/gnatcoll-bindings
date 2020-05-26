@@ -70,7 +70,7 @@ package body GNATCOLL.Python.Lifecycle is
 
    procedure Py_SetProgramName (Name : String) is
    begin
-      Py_SetProgramName (Name => FileUtils.Py_DecodeLocale (Name));
+      Py_SetProgramName (Name => Fileutils.Py_DecodeLocale (Name));
    end Py_SetProgramName;
 
    procedure Py_SetProgramName is
