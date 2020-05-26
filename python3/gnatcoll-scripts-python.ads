@@ -130,7 +130,6 @@ package GNATCOLL.Scripts.Python is
    --  Begin_Allow_Threads. As such, a typical Ada program would look like:
    --
    --      Register_Python_Scripting (...);
-   --      Initialize_Threads_Support;
    --      Begin_Allow_Threads;
    --
    --  and then in all tasks that access python:
@@ -138,11 +137,6 @@ package GNATCOLL.Scripts.Python is
    --      Ensure_Thread_State;
    --      ... python commands
    --      Begin_Allow_Threads;
-   --
-   --  NOTE:
-   --  The following functions have no effect if python was compiled without
-   --  support for threading. They do not raise an exception either, so that
-   --  you can run the code even if python doesn't have threads.
    --
    --  Input-Output and multi-tasking
    --  ------------------------------
@@ -154,17 +148,6 @@ package GNATCOLL.Scripts.Python is
    --  puts its back, and thus the output of the first thread is visible in
    --  the end. This also seems to avoid some errors in the python interpreter
    --  itself.
-
-   Has_Thread_Support : constant Boolean;
-   pragma Import (C, Has_Thread_Support, "python_with_thread");
-   --  Whether python was compiled with support for threading.
-
-   procedure Initialize_Threads_Support;
-   --  Add support for multi-tasking on the python side. This also acquires the
-   --  Global Interpreter Lock, so you should call Begin_Allow_Threads later on
-   --  to allow other threads to run.
-
-   type PyThreadState is private;
 
    function Begin_Allow_Threads return PyThreadState;
    procedure Begin_Allow_Threads;
@@ -195,7 +178,6 @@ package GNATCOLL.Scripts.Python is
    --  Return current traceback of execution of the Python code.
 
 private
-   type PyThreadState is new System.Address;
 
    ----------------------
    -- Python_scripting --

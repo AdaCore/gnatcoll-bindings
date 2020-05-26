@@ -1131,9 +1131,17 @@ package GNATCOLL.Python is
    function PyCObject_GetDesc (Self : PyObject) return System.Address;
    --  Return the Desc object that Self was created with, or null
 
+   -------------
+   -- Threads --
+   -------------
+
+   type PyThreadState_Opaque is limited private;
+   type PyThreadState is access all PyThreadState_Opaque;
+
 private
 
    type PyObject_Opaque is null record;
+   type PyThreadState_Opaque is null record;
 
    type Interpreter_State is new Integer;
 

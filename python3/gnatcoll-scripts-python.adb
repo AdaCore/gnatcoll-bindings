@@ -32,6 +32,7 @@ with GNAT.Strings;               use GNAT.Strings;
 with GNATCOLL.Any_Types.Python;
 with GNATCOLL.Python.Lifecycle;
 with GNATCOLL.Python.Errors;
+with GNATCOLL.Python.Eval;
 with GNATCOLL.Scripts.Impl;      use GNATCOLL.Scripts, GNATCOLL.Scripts.Impl;
 with GNATCOLL.Traces;            use GNATCOLL.Traces;
 with System;                     use System;
@@ -41,6 +42,7 @@ package body GNATCOLL.Scripts.Python is
 
    package Lifecycle renames GNATCOLL.Python.Lifecycle;
    package PyErr renames GNATCOLL.Python.Errors;
+   package Eval renames GNATCOLL.Python.Eval;
 
    Me       : constant Trace_Handle := Create ("PYTHON");
    Me_Error : constant Trace_Handle := Create ("PYTHON.ERROR", On);
@@ -4627,12 +4629,8 @@ package body GNATCOLL.Scripts.Python is
    -------------------------
 
    function Begin_Allow_Threads return PyThreadState is
-      --  Import only if the function exists in python, otherwise
-      --  we can undefined symbols error at link time.
-      function PyEval_SaveThread return PyThreadState;
-      pragma Import (C, PyEval_SaveThread, "ada_PyEval_SaveThread");
    begin
-      return PyEval_SaveThread;
+      return Eval.PyEval_SaveThread;
    end Begin_Allow_Threads;
 
    -------------------------
@@ -4651,10 +4649,8 @@ package body GNATCOLL.Scripts.Python is
    -----------------------
 
    procedure End_Allow_Threads (State : PyThreadState) is
-      procedure PyEval_RestoreThread (State : PyThreadState);
-      pragma Import (C, PyEval_RestoreThread, "ada_PyEval_RestoreThread");
    begin
-      PyEval_RestoreThread (State);
+      Eval.PyEval_RestoreThread (State);
    end End_Allow_Threads;
 
    ---------------------------
@@ -4682,17 +4678,6 @@ package body GNATCOLL.Scripts.Python is
    begin
       Ignored := PyGILState_Ensure;
    end Ensure_Thread_State;
-
-   --------------------------------
-   -- Initialize_Threads_Support --
-   --------------------------------
-
-   procedure Initialize_Threads_Support is
-      procedure PyEval_InitThreads;
-      pragma Import (C, PyEval_InitThreads, "ada_PyEval_InitThreads");
-   begin
-      PyEval_InitThreads;
-   end Initialize_Threads_Support;
 
    ----------------------
    -- Python_Backtrace --
