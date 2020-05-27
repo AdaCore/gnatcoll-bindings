@@ -33,6 +33,7 @@ with GNATCOLL.Any_Types.Python;
 with GNATCOLL.Python.Lifecycle;
 with GNATCOLL.Python.Errors;
 with GNATCOLL.Python.Eval;
+with GNATCOLL.Python.State;
 with GNATCOLL.Scripts.Impl;      use GNATCOLL.Scripts, GNATCOLL.Scripts.Impl;
 with GNATCOLL.Traces;            use GNATCOLL.Traces;
 with System;                     use System;
@@ -43,6 +44,7 @@ package body GNATCOLL.Scripts.Python is
    package Lifecycle renames GNATCOLL.Python.Lifecycle;
    package PyErr renames GNATCOLL.Python.Errors;
    package Eval renames GNATCOLL.Python.Eval;
+   package PyState renames GNATCOLL.Python.State;
 
    Me       : constant Trace_Handle := Create ("PYTHON");
    Me_Error : constant Trace_Handle := Create ("PYTHON.ERROR", On);
@@ -4671,12 +4673,10 @@ package body GNATCOLL.Scripts.Python is
    -------------------------
 
    procedure Ensure_Thread_State is
-      function PyGILState_Ensure return Integer;
-      pragma Import (C, PyGILState_Ensure, "ada_PyGILState_Ensure");
-      Ignored : Integer;
+      Ignored : PyState.PyGILState_STATE;
       pragma Unreferenced (Ignored);
    begin
-      Ignored := PyGILState_Ensure;
+      Ignored := PyState.PyGILState_Ensure;
    end Ensure_Thread_State;
 
    ----------------------
