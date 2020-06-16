@@ -1064,17 +1064,6 @@ package body GNATCOLL.Python is
       return null;
    end Lookup_Object;
 
-   ---------------------
-   -- PyCObject_Check --
-   ---------------------
-
-   function PyCObject_Check (Obj : PyObject) return Boolean is
-      function Internal (Obj : PyObject) return Integer;
-      pragma Import (C, Internal, "ada_pycobject_check");
-   begin
-      return Internal (Obj) = 1;
-   end PyCObject_Check;
-
    --------------------
    -- PyMethod_Check --
    --------------------

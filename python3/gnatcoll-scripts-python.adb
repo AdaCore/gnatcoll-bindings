@@ -34,6 +34,7 @@ with GNATCOLL.Python.Lifecycle;
 with GNATCOLL.Python.Errors;
 with GNATCOLL.Python.Eval;
 with GNATCOLL.Python.State;
+with GNATCOLL.Python.Capsule;
 with GNATCOLL.Scripts.Impl;      use GNATCOLL.Scripts, GNATCOLL.Scripts.Impl;
 with GNATCOLL.Traces;            use GNATCOLL.Traces;
 with System;                     use System;
@@ -45,6 +46,7 @@ package body GNATCOLL.Scripts.Python is
    package PyErr renames GNATCOLL.Python.Errors;
    package Eval renames GNATCOLL.Python.Eval;
    package PyState renames GNATCOLL.Python.State;
+   package PyC renames GNATCOLL.Python.Capsule;
 
    Me       : constant Trace_Handle := Create ("PYTHON");
    Me_Error : constant Trace_Handle := Create ("PYTHON.ERROR", On);
@@ -204,7 +206,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Unchecked_Free is new Ada.Unchecked_Deallocation
      (Handler_Data, Handler_Data_Access);
 
-   procedure Destroy_Handler_Data (Handler : System.Address);
+   procedure Destroy_Handler_Data (Capsule : PyC.PyCapsule);
    pragma Convention (C, Destroy_Handler_Data);
    --  Called when the python object associated with Handler is destroyed
 
@@ -224,7 +226,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Unchecked_Free is new Ada.Unchecked_Deallocation
      (PyObject_Data_Record, PyObject_Data);
 
-   procedure On_PyObject_Data_Destroy (Data : System.Address);
+   procedure On_PyObject_Data_Destroy (Capsule : PyC.PyCapsule);
    pragma Convention (C, On_PyObject_Data_Destroy);
    --  Called when the __gps_data property is destroyed.
 
@@ -232,7 +234,8 @@ package body GNATCOLL.Scripts.Python is
    -- Interpreter_View --
    ----------------------
 
-   function First_Level (Self, Args, Kw : PyObject) return PyObject;
+   function First_Level
+      (Self : PyC.PyCapsule; Args, Kw : PyObject) return PyObject;
    pragma Convention (C, First_Level);
    --  First level handler for all functions exported to python. This function
    --  is in charge of dispatching to the actual Ada subprogram.
@@ -659,8 +662,8 @@ package body GNATCOLL.Scripts.Python is
    -- Destroy_Handler_Data --
    --------------------------
 
-   procedure Destroy_Handler_Data (Handler : System.Address) is
-      H : Handler_Data_Access := Convert (Handler);
+   procedure Destroy_Handler_Data (Capsule : PyC.PyCapsule) is
+      H : Handler_Data_Access := Convert (PyC.PyCapsule_GetPointer (Capsule));
    begin
       Unchecked_Free (H);
    end Destroy_Handler_Data;
@@ -880,7 +883,9 @@ package body GNATCOLL.Scripts.Python is
    -- First_Level --
    -----------------
 
-   function First_Level (Self, Args, Kw : PyObject) return PyObject is
+   function First_Level
+      (Self : Capsule.PyCapsule; Args, Kw : PyObject) return PyObject
+   is
       --  Args and Kw could both be null, as called from PyCFunction_Call
 
       Handler  : Handler_Data_Access;
@@ -890,7 +895,7 @@ package body GNATCOLL.Scripts.Python is
       Result   : PyObject;
 
    begin
-      Handler := Convert (PyCObject_AsVoidPtr (Self));
+      Handler := Convert (Capsule.PyCapsule_GetPointer (Self));
 
       if Finalized
         and then Handler.Cmd.Command /= Destructor_Method
@@ -1200,7 +1205,7 @@ package body GNATCOLL.Scripts.Python is
       H         : constant Handler_Data_Access := new Handler_Data'
         (Cmd               => Cmd,
          Script            => Python_Scripting (Script));
-      User_Data : constant PyObject := PyCObject_FromVoidPtr
+      User_Data : constant PyObject := Capsule.PyCapsule_New
         (H.all'Address, Destroy_Handler_Data'Access);
       Klass     : PyObject;
       Def       : PyMethodDef;
@@ -2951,7 +2956,7 @@ package body GNATCOLL.Scripts.Python is
          PyErr_Clear;  --  error about "no such attribute"
 
          Tmp := new PyObject_Data_Record;
-         Data := PyCObject_FromVoidPtr
+         Data := PyC.PyCapsule_New
            (Tmp.all'Address, On_PyObject_Data_Destroy'Access);
          if PyObject_GenericSetAttrString (Inst.Data, "__gps_data", Data) /=
            0
@@ -2967,7 +2972,7 @@ package body GNATCOLL.Scripts.Python is
 
          return Tmp.Props'Access;
       else
-         Tmp_Addr := PyCObject_AsVoidPtr (Item);
+         Tmp_Addr := PyC.PyCapsule_GetPointer (Item);
          Tmp := Convert (Tmp_Addr);
          Py_DECREF (Item);
          return Tmp.Props'Access;
@@ -2978,8 +2983,8 @@ package body GNATCOLL.Scripts.Python is
    -- On_PyObject_Data_Destroy --
    ------------------------------
 
-   procedure On_PyObject_Data_Destroy (Data : System.Address) is
-      D : PyObject_Data := Convert (Data);
+   procedure On_PyObject_Data_Destroy (Capsule : PyC.PyCapsule) is
+      D : PyObject_Data := Convert (PyC.PyCapsule_GetPointer (Capsule));
    begin
       Free_User_Data_List (D.Props);
       Unchecked_Free (D);

@@ -1093,44 +1093,6 @@ package GNATCOLL.Python is
    --  Return previous frame in stack.
    --  Returns a borrowed reference, no need to Py_DECREF
 
-   -------------------------------------
-   -- Embedding Ada objects in python --
-   -------------------------------------
-
-   subtype PyCObject is PyObject;
-   --  This type represents an opaque value that contains any kind of data,
-   --  transparent for python.
-
-   function PyCObject_Check (Obj : PyObject) return Boolean;
-   --  Return True if Obj is a Py_CObject
-
-   type PyCObject_Destructor is access procedure (Obj : System.Address);
-   pragma Convention (C, PyCObject_Destructor);
-   type PyCObject_Destructor2 is access
-     procedure (Obj : System.Address; Desc : System.Address);
-   pragma Convention (C, PyCObject_Destructor2);
-
-   function PyCObject_FromVoidPtr
-     (Obj   : System.Address;
-      Destr : PyCObject_Destructor := null)
-      return PyObject;
-   --  Create a new PyCObject that encapsulate Obj. Destr is called when the
-   --  object is reclaimed, unless it is null.
-   --  Returns a newly referenced object.
-
-   function PyCObject_FromVoidPtrAndDesc
-     (Obj   : System.Address;
-      Desc  : System.Address;
-      Destr : PyCObject_Destructor2 := null)
-      return PyObject;
-   --  Same as above, except Desc is also passed to Destr
-
-   function PyCObject_AsVoidPtr (Self : PyObject) return System.Address;
-   --  Return the Ada object embedded in Self
-
-   function PyCObject_GetDesc (Self : PyObject) return System.Address;
-   --  Return the Desc object that Self was created with, or null
-
    -------------
    -- Threads --
    -------------
@@ -1218,12 +1180,6 @@ private
    pragma Import (C, PyFunction_Get_Globals, "ada_pyfunction_get_globals");
    pragma Import (C, PyFunction_Get_Closure, "ada_pyfunction_get_closure");
    pragma Import (C, PyFunction_Get_Defaults, "ada_pyfunction_get_defaults");
-   pragma Inline (PyCObject_Check);
-   pragma Import (C, PyCObject_FromVoidPtr, "PyCObject_FromVoidPtr");
-   pragma Import
-     (C, PyCObject_FromVoidPtrAndDesc, "PyCObject_FromVoidPtrAndDesc");
-   pragma Import (C, PyCObject_AsVoidPtr, "PyCObject_AsVoidPtr");
-   pragma Import (C, PyCObject_GetDesc, "PyCObject_GetDesc");
    pragma Import (C, PyMethod_Function, "PyMethod_Function");
    pragma Import (C, PyMethod_Self, "PyMethod_Self");
    pragma Import (C, PyFrame_GetLineNumber, "PyFrame_GetLineNumber");

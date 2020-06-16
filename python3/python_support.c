@@ -770,20 +770,6 @@ PyAPI_FUNC(PyObject *) PyString_FromStringAndSize(
    return PyUnicode_FromStringAndSize(val, s);
 };
 
-PyAPI_FUNC(void *) PyCObject_AsVoidPtr(PyObject * val) {
-   void* data = PyCapsule_GetPointer(val, NULL);
-   return data;
-};
-
-PyAPI_FUNC(PyObject *) PyCObject_FromVoidPtr(
-    void *cobj, void (*destruct)(void*))
-{
-   return PyCapsule_New(
-         cobj /* pointer */,
-         NULL /* name */,
-         (PyCapsule_Destructor) destruct);
-};
-
 PyAPI_FUNC(PyObject *) PyFile_FromString
   (const char *file_name, const char *mode)
 {
