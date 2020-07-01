@@ -26,7 +26,7 @@ with "gnatcoll";
 project GnatColl_Python is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
-   Name    := "gnatcoll_python";
+   Name    := "gnatcoll_python3";
 
    type Build_Type is ("DEBUG", "PROD");
    Build : Build_Type := External ("BUILD", "PROD");
