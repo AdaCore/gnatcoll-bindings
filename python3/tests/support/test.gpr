@@ -1,0 +1,15 @@
+with "gnatcoll_python";
+
+project Test is
+   Test_Sources := External("TEST_SOURCES", "");
+   Support_Sources := External("SUPPORT_SOURCES", "");
+   for Source_Dirs use (Test_Sources, Support_Sources);
+   for Main use ("test.adb");
+   for Languages use ("Ada");
+   for Object_Dir use "obj";
+   
+   package Compiler is
+      for Default_Switches ("Ada") use ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall",
+      "-fstack-check");
+   end Compiler;
+end Test;
