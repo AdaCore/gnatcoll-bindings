@@ -1,0 +1,10 @@
+description: test gnatcoll.scripts.execute_file
+goals: |
+    The test spawn a python script using the GNATCOLL.Scripts function
+    Execute_File. The test is using an intermediate test.py to launch
+    it in order to ensure that I/O are redirected correctly.
+
+    Note that with Python 3.x, if GNATCOLL.Scripts.Python.Destroy is
+    not called some output might be lost when stdout is not a console.
+    Indeed Python 3.x buffering strategy differs from Python 2.x
+    (Issue detected in T701-014)

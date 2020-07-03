@@ -1,4 +1,5 @@
 with Ada.Environment_Variables;
+with GNATCOLL.Python.Lifecycle; use GNATCOLL.Python.Lifecycle;
 
 package body Test_Common is
 
@@ -9,4 +10,8 @@ package body Test_Common is
       return Env.Value ("ADA_PYTHON_HOME");
    end Python_Home;
 
+   procedure Set_Python_Home is
+   begin
+      Py_SetPythonHome (Python_Home);
+   end Set_Python_Home;
 end Test_Common;

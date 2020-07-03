@@ -1,6 +1,7 @@
 testsuite/*/*/*                            no-precommit-check
 testsuite/*/*/*/*                          no-precommit-check
 testsuite/*/*/*/*/*                        no-precommit-check
+python3/tests/*/*/*                        no-precommit-check
 python3/tests/*/*                          no-precommit-check
 python3/tests/*                            no-precommit-check
 

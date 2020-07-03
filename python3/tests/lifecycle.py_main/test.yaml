@@ -1,2 +1,0 @@
-description: test using python interpreter main loop
-test_args: ["-c", "import sys; print(sys.executable)"]

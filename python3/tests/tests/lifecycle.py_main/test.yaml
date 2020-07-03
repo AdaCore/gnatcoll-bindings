@@ -1,0 +1,7 @@
+description: test using python interpreter main loop
+goals: |
+    The goal of the test is to use GNATCOLL.Python.Lifecycle.Py_Main
+    to launch the interpreter console loop. The test also ensure that
+    arguments on the command line are passed correctly to the Python
+    interpreter.
+test_args: ["-c", "import sys; print(sys.executable)"]

@@ -4,7 +4,7 @@ from e3.testsuite.driver import TestDriver
 from e3.testsuite.result import TestStatus
 from e3.testsuite.process import check_call
 from e3.env import Env
-from e3.fs import mkdir
+from e3.fs import mkdir, cp, ls
 import logging
 import sys
 import os
@@ -41,6 +41,9 @@ class DefaultDriver(TestDriver):
         }
 
         mkdir(self.build_dir)
+        py_files = ls(os.path.join(self.test_source_dir, "*.py"))
+        if py_files:
+            cp(py_files, self.build_dir)
         check_call(
             self,
             ["gprbuild", "-P", self.project_file, "--relocate-build-tree", "-p"],
@@ -52,12 +55,19 @@ class DefaultDriver(TestDriver):
 
     def run(self, prev, slot):
         if self.result.status == TestStatus.ERROR:  # means that status was not set
-            self.test_process = check_call(
-                self,
-                [os.path.join(self.build_dir, "obj", "test")]
-                + self.test_env.get("test_args", []),
-                timeout=60,
-            )
+            test_py = os.path.join(self.build_dir, "test.py")
+            if os.path.isfile(test_py):
+                self.test_process = check_call(
+                    self, [sys.executable, "./test.py"], cwd=self.build_dir, timeout=60
+                )
+            else:
+                self.test_process = check_call(
+                    self,
+                    [os.path.join(self.build_dir, "obj", "test")]
+                    + self.test_env.get("test_args", []),
+                    timeout=60,
+                    cwd=self.build_dir,
+                )
 
     def analyze(self, prev, slot):
         if self.result.status == TestStatus.ERROR:  # means that status was not set
@@ -78,6 +88,7 @@ class GNATCOLLPython3Test(Testsuite):
 
     test_driver_map = {"default": DefaultDriver}
     default_driver = "default"
+    tests_subdir = "tests"
 
 
 if __name__ == "__main__":
