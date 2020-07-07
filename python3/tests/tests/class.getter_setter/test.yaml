@@ -1,0 +1,4 @@
+description: test the creation of getter/setter
+goals: |
+    The test creates a class named My_Class which has a getter and a setter
+    for its component named "value" of type float.

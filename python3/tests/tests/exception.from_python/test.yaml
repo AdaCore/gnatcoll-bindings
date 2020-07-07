@@ -1,0 +1,4 @@
+description: test propagation of exception from Python to Ada
+goals: |
+    Execute a python script raising an exception check that the Ada layer
+    recieved the error.

@@ -1,0 +1,5 @@
+description: test the creation of the hidden property __gps_data
+goals: |
+    The test generates a python class named My_Class and add the hidden
+    property __gps_data. Then it will verify the data stored inside __gps_data
+    can easily be retrieved in the Ada layer.

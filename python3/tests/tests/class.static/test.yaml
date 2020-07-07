@@ -1,0 +1,3 @@
+description: test the creation of static method
+goals: |
+    Creates a class named My_Class with a staticmethod named Hello.

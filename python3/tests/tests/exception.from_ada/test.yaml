@@ -1,0 +1,5 @@
+description: test the propagation of error from Ada to Python
+goals: |
+    Creates a class named My_Class with a static method "raise_error" which
+    raises an error with a custom message. The error and the message should
+    properly be propagated to the Python script.

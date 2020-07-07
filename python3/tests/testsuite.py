@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 from e3.testsuite import Testsuite
 from e3.testsuite.driver import TestDriver
 from e3.testsuite.result import TestStatus
