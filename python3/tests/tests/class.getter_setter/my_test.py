@@ -8,6 +8,4 @@ assert m.get_value() == 42.0
 m.set_value(m.get_value() / 2 + 0.1)
 # Verify the value almost match
 assert str(m.get_value()).startswith("21.1")
-# the getter and the component should return the same
-assert m.get_value() == m.value
 print('<=== TEST PASSED ===>')
