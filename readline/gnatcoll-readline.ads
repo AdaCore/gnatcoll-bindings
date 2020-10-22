@@ -120,6 +120,4 @@ package GNATCOLL.Readline is
 
 private
    type Possible_Completions_Array is null record;
-
-   pragma Linker_Options ("-lreadline");
 end GNATCOLL.Readline;

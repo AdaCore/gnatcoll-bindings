@@ -43,11 +43,13 @@ library project GnatColl_Readline is
       use "lib/" & Project'Library_Kind;
    for Library_Name    use Name;
 
+   Link_Opts := ("-lreadline");
+
    case Library_Type is
       when "relocatable" =>
          for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
          for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
-         for Library_Options use ("-lreadline");
+         for Library_Options use Link_Opts;
       when others =>
          null;
    end case;
@@ -69,6 +71,10 @@ library project GnatColl_Readline is
       for Switches ("Ada") use Compiler'Switches ("Ada")
         & External_As_List ("ADAFLAGS", " ");
    end Compiler;
+
+   package Linker is
+      for Linker_Options use Link_Opts;
+   end Linker;
 
    package Binder is
       case Build is
