@@ -4,8 +4,9 @@ import sys
 import re
 import os
 import json
+import shutil
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from setup_support import SetupApp
+from setup_support import SetupApp, Config
 
 PYTHON_DATA_SCRIPT = """
 from distutils.sysconfig import (get_config_var, get_python_inc,
@@ -83,13 +84,15 @@ def fetch_python_config(config):
     python_shared_libs = "-L%s -lpython%s %s" % (shared_dir,
                                                  python_ldversion,
                                                  python_libs)
-    python_static_libs = ''
+    python_static_libs = python_libs
     libpython_a = os.path.join(
         static_dir,
         config_vars.get('LIBRARY', 'libpython%s.a' % python_version))
 
     if os.path.isfile(libpython_a):
-        python_static_libs = libpython_a + ' ' + python_libs
+        config.set_data('GNATCOLL_PYTHON_STATIC_LIB',
+                        libpython_a, sub='gprbuild')
+
     if sys.platform.startswith('linux'):
         # On Linux platform, even when linking with the static libpython,
         # symbols not used by the application itself should be exported so
@@ -186,6 +189,22 @@ class GNATCollPython(SetupApp):
             else:
                 result.append(([], gpr_vars))
         return result
+
+    def install(self, args):
+        config = Config()
+        python_la = config.data["gprbuild"]["GNATCOLL_PYTHON_STATIC_LIB"]
+        prefix = config.data["prefix"]
+        target = os.path.join(
+            "..", "..", "lib", "gnatcoll_python.static",
+            os.path.basename(python_la)
+        )
+        config.set_data("GNATCOLL_PYTHON_STATIC_LIB", target, sub='gprbuild')
+        config.save_data()
+        super(GNATCollPython, self).install(args)
+
+        # Copy over the libpython*.la
+        shutil.copy(
+            python_la, os.path.join(prefix, "lib", "gnatcoll_python.static"))
 
 
 if __name__ == '__main__':

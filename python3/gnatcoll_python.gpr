@@ -37,6 +37,7 @@ project GnatColl_Python is
 
    Python_CFLAGS := External("GNATCOLL_PYTHON_CFLAGS", "");
    Python_Libs := External("GNATCOLL_PYTHON_LIBS", "");
+   Python_Static_Lib := External("GNATCOLL_PYTHON_STATIC_LIB", "");
    Libpython_Kind := External("GNATCOLL_LIBPYTHON_KIND", "shared");
 
    for Source_Dirs     use (".");
@@ -97,7 +98,7 @@ project GnatColl_Python is
    end Builder;
 
    package Linker is
-      for Linker_Options use Split(Python_Libs, " ");
+      for Linker_Options use (Python_Static_Lib) & Split(Python_Libs, " ");
    end Linker;
 
    package Ide is
