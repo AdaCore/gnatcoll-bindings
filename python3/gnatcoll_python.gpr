@@ -98,7 +98,12 @@ project GnatColl_Python is
    end Builder;
 
    package Linker is
-      for Linker_Options use (Python_Static_Lib) & Split(Python_Libs, " ");
+      case Libpython_Kind is
+         when "shared" =>
+            for Linker_Options use Split(Python_Libs, " ");
+         when others =>
+            for Linker_Options use (Python_Static_Lib) & Split(Python_Libs, " ");
+      end case;
    end Linker;
 
    package Ide is
