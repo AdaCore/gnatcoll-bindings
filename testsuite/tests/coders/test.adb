@@ -22,6 +22,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
+with Ada.Exceptions;
 with Ada.Streams;           use Ada.Streams;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;           use Ada.Text_IO;
@@ -31,6 +32,7 @@ with GNATCOLL.Coders.ZLib;
 with GNATCOLL.Coders.Streams;
 with GNATCOLL.Paragraph_Filling;
 
+with Save_Streams;
 with Test_Streams;
 with Test_Assert;
 
@@ -183,10 +185,43 @@ function Test return Integer is
       end loop;
 
       Coder_Stream.Flush (Finish);
-      --  Put_Line (Coder.Total_In'Img & Coder.Total_Out'Img);
    end Test_Stream_Coder;
 
+   ------------------
+   -- Another_Test --
+   ------------------
+
+   procedure Another_Test
+     (Coder, Back : in out Coder_Class; Remove_Tail : Natural)
+   is
+      Save_Stream  : aliased Save_Streams.Stream_Type;
+      Coder_Stream : Streams.Stream_Type;
+      Got_Back     : Stream_Element_Array (Source'First .. Source'Last + 1);
+      Last         : Stream_Element_Offset;
+   begin
+      Coder_Stream.Initialize
+        (Write_Coder => Coder'Unchecked_Access,
+         Write_To    => Save_Stream'Unchecked_Access);
+
+      Coder_Stream.Write (Source);
+      Coder_Stream.Flush (Finish);
+
+      Coder_Stream.Initialize
+        (Read_Coder => Back'Unchecked_Access,
+         Read_From  => Save_Stream'Unchecked_Access);
+
+      Put_Line ("Remove tail" & Remove_Tail'Img);
+      Save_Stream.Remove_Last_Bytes (Remove_Tail);
+
+      Coder_Stream.Read (Got_Back, Last);
+
+      A.Assert
+        (Source = Got_Back (Got_Back'First .. Last),
+         "compare with data got back");
+   end Another_Test;
+
 begin
+
    -----------------
    --  LZMA tests --
    -----------------
@@ -206,7 +241,22 @@ begin
          Stamp : constant Time := Clock;
       begin
          Test_Stream_Coder (Coder_X, Back_X);
-         --  Put_Line (T'Img & Duration'Image (Clock - Stamp));
+         Put_Line (T'Img & Duration'Image (Clock - Stamp));
+      end;
+   end loop;
+
+   for J in 0 .. 2 loop
+      Coder_X.Encoder (Threads => 2);
+      Back_X.Auto_Decoder;
+      begin
+         Another_Test (Coder_X, Back_X, J);
+         A.Assert (J = 0, "Expected success on holistic data");
+      exception
+         when E : LZMA.LZMA_Error =>
+            A.Assert
+              (J > 0,
+               "Expected failure on truncated data "
+               & Ada.Exceptions.Exception_Message (E));
       end;
    end loop;
 
@@ -222,8 +272,22 @@ begin
 
    Coder_Z.Deflate_Init;
    Back_Z.Inflate_Init;
-
    Test_Stream_Coder (Coder_Z, Back_Z);
+
+   for J in 0 .. 2 loop
+      Coder_Z.Deflate_Init;
+      Back_Z.Inflate_Init;
+      begin
+         Another_Test (Coder_Z, Back_Z, J);
+         A.Assert (J = 0, "Expected success on holistic data");
+      exception
+         when E : ZLib.ZLib_Error =>
+            A.Assert
+              (J > 0,
+               "Expected failure on truncated data "
+               & Ada.Exceptions.Exception_Message (E));
+      end;
+   end loop;
 
    return A.Report;
 end Test;

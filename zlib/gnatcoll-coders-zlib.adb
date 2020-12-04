@@ -316,8 +316,7 @@ package body GNATCOLL.Coders.ZLib is
       Set_In  (Coder.Stream.all, In_Data'Address, In_Data'Length);
 
       Code := Flate (Coder.Compression).Step
-        (Coder.Stream,
-         Flush_To_C (Flush));
+                (Coder.Stream, Flush_To_C (Flush));
 
       if Code = Thin.Z_STREAM_END then
          Coder.Stream_End := True;
@@ -327,16 +326,19 @@ package body GNATCOLL.Coders.ZLib is
           (Code /= Z_BUF_ERROR
            or else Flush = No_Flush
            or else In_Data'Length > 0
-           or else Total_In (Coder.Stream.all) = 0)
+           or else Total_In (Coder.Stream.all) = 0
+           or else (In_Data'Length = 0
+                    and then Flush = Finish
+                    and then Avail_Out (Coder.Stream.all) = Out_Data'Length))
       then
          raise ZLib_Error with Return_Code_Enum'Image (Return_Code (Code)) &
            ": " & Last_Error_Message (Coder.Stream.all);
       end if;
 
       In_Last  := In_Data'Last
-         - Stream_Element_Offset (Avail_In (Coder.Stream.all));
+        - Stream_Element_Offset (Avail_In (Coder.Stream.all));
       Out_Last := Out_Data'Last
-         - Stream_Element_Offset (Avail_Out (Coder.Stream.all));
+        - Stream_Element_Offset (Avail_Out (Coder.Stream.all));
    end Transcode_Auto;
 
    --------------------
@@ -415,7 +417,7 @@ package body GNATCOLL.Coders.ZLib is
          Add_Data (Simple_GZip_Header);
 
          Transcode_Auto
-           (Coder   => Coder,
+           (Coder    => Coder,
             In_Data  => In_Data,
             In_Last  => In_Last,
             Out_Data => Out_Data (Out_First .. Out_Data'Last),
