@@ -26,4 +26,4 @@ man_pages = [
 # Bibliographic Dublin Core info.
 epub_title = u'GNATcoll Bindings - Python'
 
-execfile('../../docs-common/common_conf.py')
+exec(open('../../docs-common/common_conf.py').read())
