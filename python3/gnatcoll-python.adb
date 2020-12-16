@@ -869,14 +869,16 @@ package body GNATCOLL.Python is
       C_Func : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
+      Def : constant MethodDef_Access := new PyMethodDef'(Func);
    begin
+      Def.Flags := Def.Flags or METH_KEYWORDS or METH_VARGS;
       if Self /= null then
          C_Func := PyCFunction_New
-           (new PyMethodDef'(Func), Self,
+           (Def, Self,
             PyString_FromString (PyModule_Getname (Module)));
       else
          C_Func := PyCFunction_New
-           (new PyMethodDef'(Func), Module,
+           (Def, Module,
             PyString_FromString (PyModule_Getname (Module)));
       end if;
 
@@ -901,8 +903,10 @@ package body GNATCOLL.Python is
          Class  : PyObject;
          Module : PyObject);
       pragma Import (C, Add_Method, "ada_py_add_method");
+      Def : constant MethodDef_Access := new PyMethodDef'(Func);
    begin
-      Add_Method (new PyMethodDef'(Func), Self, Class, Module);
+      Def.Flags := Def.Flags or METH_KEYWORDS or METH_VARGS;
+      Add_Method (Def, Self, Class, Module);
    end Add_Method;
 
    -----------------------
@@ -1012,7 +1016,7 @@ package body GNATCOLL.Python is
    begin
       return (Name  => New_String (Name),
               Func  => To_Callback (Func),
-              Flags => METH_VARGS,
+              Flags => METH_KEYWORDS or METH_VARGS,
               Doc   => New_String (Doc));
    end Create_Method_Def;
 
