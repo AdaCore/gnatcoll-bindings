@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 --                          G N A T C O L L                                 --
 --                                                                          --
---                     Copyright (C) 2003-2020, AdaCore                     --
+--                     Copyright (C) 2003-2021, AdaCore                     --
 --                                                                          --
 -- This is free software;  you can redistribute it  and/or modify it  under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -20,7 +20,7 @@
 #define PY_LONG_LONG long long
 #include <Python.h>
 #include <compile.h>  /* PyCodeObject definition in older versions*/
-#include <frameobject.h>  /* PyFrameObject definition */
+#include <frameobject.h> /* PyFrameObject definition */
 #include <string.h>
 
 /* On Windows and if we have HAVE_DECLSPEC_DLL defined remove the
@@ -186,12 +186,17 @@ ada_py_initialize_and_module(char* program_name, char* name) {
 
 typedef struct {
   PyDescr_COMMON;
-  PyObject*  cfunc;   // An instance of PyCFunction, bound with the
-                      // data that Ada needs, in the form of a PyCapsule.
+  PyObject *cfunc; // An instance of PyCFunction, bound with the
+                   // data that Ada needs, in the form of a PyCapsule.
 } PyAdaMethodDescrObject;
 
 PyTypeObject PyAdaMethodDescr_Type;
 int adamethod_descr_initialized = 0;
+
+static PyObject *adamethod_descr_call(PyAdaMethodDescrObject *descr,
+                                      PyObject *arg, PyObject *kw) {
+    return PyObject_Call((PyObject *)descr->cfunc, arg, kw);;
+}
 
 // Implementation of the __get__ descriptor method. The code is heavily
 // copied from descrobject.c::method_get.
@@ -200,7 +205,6 @@ static PyObject * adamethod_descr_get
    (PyAdaMethodDescrObject *descr, PyObject *obj, PyObject *type)
 {
   PyObject *res;
-
   if (obj == NULL) {
     Py_INCREF(descr);
     return (PyObject*) descr;
@@ -227,7 +231,10 @@ PyDescr_NewAdaMethod(PyTypeObject *type, PyObject* cfunc, const char* name)
     adamethod_descr_initialized = 1;
     memcpy (&PyAdaMethodDescr_Type, &PyMethodDescr_Type, sizeof (PyTypeObject));
     PyAdaMethodDescr_Type.tp_basicsize = sizeof(PyAdaMethodDescrObject);
+    // cfunc is hidden inside the new descriptor use tp_descr_get and tp_call
+    // to internally dispatch and call cfunc
     PyAdaMethodDescr_Type.tp_descr_get = (descrgetfunc)adamethod_descr_get;
+    PyAdaMethodDescr_Type.tp_call = (ternaryfunc)adamethod_descr_call;
   }
 
   PyAdaMethodDescrObject *descr = (PyAdaMethodDescrObject*) PyType_GenericAlloc
