@@ -299,9 +299,7 @@ ada_py_refcount_msg (PyObject* obj)
    return msg;
 }
 
-void
-ada_py_print_refcount (PyObject* obj, char* msg)
-{
+void ada_py_print_refcount(PyObject* obj, char* msg) {
   if (obj)
     printf ("DEBUG %s %s\n", msg, ada_py_refcount_msg (obj));
 }
@@ -723,9 +721,15 @@ PyThreadState* ada_PyGILState_GetThisThreadState() {
 
 int ada_PyGILState_Ensure() {
 #ifdef WITH_THREAD
-   return PyGILState_Ensure();
+   return (int)PyGILState_Ensure();
 #else
    return 0;
+#endif
+}
+
+void ada_PyGILState_Release(PyGILState_STATE state) {
+#ifdef WITH_THREAD
+   PyGILState_Release((PyGILState_STATE)state);
 #endif
 }
 

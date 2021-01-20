@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2020, AdaCore                     --
+--                     Copyright (C) 2003-2021, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -641,11 +641,10 @@ package body GNATCOLL.Python is
    function PyObject_GetAttrString
      (Object : PyObject; Name : String) return PyObject
    is
-      S : chars_ptr := New_String (Name);
-      Result : constant PyObject := PyObject_GetAttrString (Object, S);
+      function Internal (Object : PyObject; S : String) return PyObject;
+      pragma Import (C, Internal, "PyObject_GetAttrString");
    begin
-      Free (S);
-      return Result;
+      return Internal (Object, Name & ASCII.NUL);
    end PyObject_GetAttrString;
 
    ----------------------------
@@ -658,7 +657,7 @@ package body GNATCOLL.Python is
       function Internal (Object : PyObject; S : String) return Integer;
       pragma Import (C, Internal, "PyObject_HasAttrString");
    begin
-      return Boolean'Val (Internal (Obj, Attr_Name & ASCII.NUL));
+      return Boolean'Val (Internal (Obj, Attr_Name));
    end PyObject_HasAttrString;
 
    ----------------------------

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                       Copyright (C) 2020, AdaCore                        --
+--                       Copyright (C) 2020-2021, AdaCore                   --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -28,6 +28,17 @@ package body GNATCOLL.Python.Lifecycle is
 
    package Fileutils renames GNATCOLL.Python.Fileutils;
 
+   Finalized : Boolean := False;
+
+   ------------------
+   -- Is_Finalized --
+   ------------------
+
+   function Is_Finalized return Boolean is
+   begin
+      return Finalized;
+   end Is_Finalized;
+
    -----------------
    -- Py_Finalize --
    -----------------
@@ -37,6 +48,7 @@ package body GNATCOLL.Python.Lifecycle is
       pragma Import (C, Internal, "Py_FinalizeEx");
 
    begin
+      Finalized := True;
       return Internal = 0;
    end Py_Finalize;
 
@@ -48,6 +60,7 @@ package body GNATCOLL.Python.Lifecycle is
       procedure Internal (Init_Sigs : Integer);
       pragma Import (C, Internal, "Py_InitializeEx");
    begin
+      Finalized := False;
       if Initialize_Signal_Handlers then
          Internal (Init_Sigs => 1);
       else

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2020, AdaCore                     --
+--                     Copyright (C) 2003-2021, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -467,8 +467,10 @@ package body GNATCOLL.Scripts.Python is
    -- Trace_Dump --
    ----------------
 
-   procedure Trace_Dump (Name : String; Obj : PyObject) is
-      S : PyObject;
+   procedure Trace_Dump (Name : String; Obj : PyObject)
+   is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      S    : PyObject;
    begin
       if Obj = null then
          Put_Line (Name & "=<null>");
@@ -510,14 +512,16 @@ package body GNATCOLL.Scripts.Python is
    -- Destroy --
    -------------
 
-   procedure Destroy (Script : access Python_Scripting_Record) is
+   procedure Destroy (Script : access Python_Scripting_Record)
+   is
+      Ignored : Boolean;
    begin
       if not Finalized then
          Trace (Me, "Finalizing python");
          Finalized := True;
          Set_Default_Console (Script, null);
          Free (Script.Buffer);
-         Lifecycle.Py_Finalize;
+         Ignored := Lifecycle.Py_Finalize;
       end if;
    end Destroy;
 
@@ -573,68 +577,72 @@ package body GNATCOLL.Scripts.Python is
 
       Finalized := False;
 
-      if Active (Me_Stack)
-        and then not PyRun_SimpleString ("import traceback")
-      then
-         raise Program_Error with "Could not import traceback.py";
-      end if;
+      declare
+         Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      begin
+         if Active (Me_Stack)
+           and then not PyRun_SimpleString ("import traceback")
+         then
+            raise Program_Error with "Could not import traceback.py";
+         end if;
 
-      Main_Module := PyImport_AddModule ("__main__");
-      if Main_Module = null then
-         raise Program_Error with "Could not import module __main__";
-      end if;
-      Script.Globals := PyModule_GetDict (Main_Module);
+         Main_Module := PyImport_AddModule ("__main__");
+         if Main_Module = null then
+            raise Program_Error with "Could not import module __main__";
+         end if;
+         Script.Globals := PyModule_GetDict (Main_Module);
 
-      Script.Buffer := new String'("");
-      Script.Builtin := PyImport_ImportModule (Builtin_Name);
+         Script.Buffer := new String'("");
+         Script.Builtin := PyImport_ImportModule (Builtin_Name);
 
-      Script.Exception_Unexpected := PyErr_NewException
-        (Module & ".Unexpected_Exception", null, null);
-      Ignored := PyModule_AddObject
-        (Script.Module, "Unexpected_Exception" & ASCII.NUL,
-         Script.Exception_Unexpected);
+         Script.Exception_Unexpected := PyErr_NewException
+           (Module & ".Unexpected_Exception", null, null);
+         Ignored := PyModule_AddObject
+           (Script.Module, "Unexpected_Exception" & ASCII.NUL,
+            Script.Exception_Unexpected);
 
-      Script.Exception_Misc := PyErr_NewException
-        (Module & ".Exception", null, null);
-      Ignored := PyModule_AddObject
-        (Script.Module, "Exception" & ASCII.NUL, Script.Exception_Misc);
+         Script.Exception_Misc := PyErr_NewException
+           (Module & ".Exception", null, null);
+         Ignored := PyModule_AddObject
+           (Script.Module, "Exception" & ASCII.NUL, Script.Exception_Misc);
 
-      Script.Exception_Missing_Args := PyErr_NewException
-        (Module & ".Missing_Arguments", null, null);
-      Ignored := PyModule_AddObject
-        (Script.Module, "Missing_Arguments" & ASCII.NUL,
-         Script.Exception_Missing_Args);
+         Script.Exception_Missing_Args := PyErr_NewException
+           (Module & ".Missing_Arguments", null, null);
+         Ignored := PyModule_AddObject
+           (Script.Module, "Missing_Arguments" & ASCII.NUL,
+            Script.Exception_Missing_Args);
 
-      Script.Exception_Invalid_Arg := PyErr_NewException
-        (Module & ".Invalid_Argument", null, null);
-      Ignored := PyModule_AddObject
-        (Script.Module, "Invalid_Argument" & ASCII.NUL,
-         Script.Exception_Invalid_Arg);
+         Script.Exception_Invalid_Arg := PyErr_NewException
+           (Module & ".Invalid_Argument", null, null);
+         Ignored := PyModule_AddObject
+           (Script.Module, "Invalid_Argument" & ASCII.NUL,
+            Script.Exception_Invalid_Arg);
 
-      --  PyGTK prints its error messages using sys.argv, which doesn't
-      --  exist in non-interactive mode. We therefore define it here
+         --  PyGTK prints its error messages using sys.argv, which doesn't
+         --  exist in non-interactive mode. We therefore define it here
 
-      if not PyRun_SimpleString ("sys.argv=['" & Module & "']") then
-         Trace (Me_Error, "Could not initialize sys.argv");
-      end if;
+         if not PyRun_SimpleString ("sys.argv=['" & Module & "']") then
+            Trace (Me_Error, "Could not initialize sys.argv");
+         end if;
 
-      --  This function is required for support of the Python menu (F120-025),
-      --  so that we can execute python commands in the context of the global
-      --  interpreter instead of the current context (for the menu, that would
-      --  be python_support.py, and thus would have no impact on the
-      --  interpreter itself)
+         --  This function is required for support of the Python menu
+         --  (F120-025), so that we can execute python commands in the context
+         --  of the global interpreter instead of the current context
+         --  (for the menu, that would be python_support.py, and thus would
+         --  have no impact on the interpreter itself)
 
-      Register_Command
-        (Repo,
-         Command       => "exec_in_console",
-         Handler       => Python_Global_Command_Handler'Access,
-         Minimum_Args  => 1,
-         Maximum_Args  => 1,
-         Language      => Python_Name);
+         Register_Command
+           (Repo,
+            Command       => "exec_in_console",
+            Handler       => Python_Global_Command_Handler'Access,
+            Minimum_Args  => 1,
+            Maximum_Args  => 1,
+            Language      => Python_Name);
 
-      if Active (Me_Crash) then
-         PyEval_SetTrace (Trace_Python_Code'Access, null);
-      end if;
+         if Active (Me_Crash) then
+            PyEval_SetTrace (Trace_Python_Code'Access, null);
+         end if;
+      end;
    end Register_Python_Scripting;
 
    -----------------------------------
@@ -672,7 +680,9 @@ package body GNATCOLL.Scripts.Python is
    -- Free --
    ----------
 
-   procedure Free (Data : in out Python_Callback_Data) is
+   procedure Free (Data : in out Python_Callback_Data)
+   is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       if Data.Args /= null then
          Py_DECREF (Data.Args);
@@ -697,15 +707,17 @@ package body GNATCOLL.Scripts.Python is
    -- Set_Item --
    --------------
 
-   procedure Set_Item (Args : PyObject; T : Integer; Item : PyObject) is
-      N : Integer;
+   procedure Set_Item (Args : PyObject; T : Integer; Item : PyObject)
+   is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      N    : Integer;
       pragma Unreferenced (N);
    begin
       --  Special case tuples, since they are immutable through
       --  PyObject_SetItem
       if PyTuple_Check (Args) then
-         PyTuple_SetItem (Args, T, Item);  --  Doesn't modify refcount
          Py_INCREF (Item);
+         PyTuple_SetItem (Args, T, Item);  --  Doesn't modify refcount
 
       --  Also special case lists, since we want to append if the index is
       --  too big
@@ -726,7 +738,9 @@ package body GNATCOLL.Scripts.Python is
    -- Clone --
    -----------
 
-   function Clone (Data : Python_Callback_Data) return Callback_Data'Class is
+   function Clone (Data : Python_Callback_Data) return Callback_Data'Class
+   is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       D    : Python_Callback_Data := Data;
       Item : PyObject;
       Size : Integer;
@@ -776,7 +790,9 @@ package body GNATCOLL.Scripts.Python is
 
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data;
-      N : Positive; Value : PyObject) is
+      N : Positive; Value : PyObject)
+   is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       Set_Item (Data.Args, N - 1, Value);
       Py_DECREF (Value);
@@ -790,6 +806,7 @@ package body GNATCOLL.Scripts.Python is
      (Data : in out Python_Callback_Data;
       N : Positive; Value : Subprogram_Type)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Subp : constant PyObject :=
               Python_Subprogram_Record (Value.all).Subprogram;
    begin
@@ -804,6 +821,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data; N : Positive; Value : String)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Item : constant PyObject := PyString_FromString (Value);
    begin
       Set_Item (Data.Args, N - 1, Item);
@@ -817,6 +835,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data; N : Positive; Value : Integer)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Item : constant PyObject := PyInt_FromLong (Interfaces.C.long (Value));
    begin
       Set_Item (Data.Args, N - 1, Item);
@@ -830,6 +849,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data; N : Positive; Value : Float)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Item : constant PyObject := PyFloat_FromDouble
         (Interfaces.C.double (Value));
    begin
@@ -844,6 +864,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data; N : Positive; Value : Boolean)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Item : constant PyObject := PyInt_FromLong (Boolean'Pos (Value));
    begin
       Set_Item (Data.Args, N - 1, Item);
@@ -888,6 +909,7 @@ package body GNATCOLL.Scripts.Python is
    is
       --  Args and Kw could both be null, as called from PyCFunction_Call
 
+      Lock     : PyState.Ada_GIL_Lock;
       Handler  : Handler_Data_Access;
       Size     : Integer := 0;
       Callback : Python_Callback_Data;
@@ -1032,6 +1054,7 @@ package body GNATCOLL.Scripts.Python is
       Data    : in out Python_Callback_Data'Class;
       Result  : out PyObject)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       --  Return_Value will be set to null in case of error
       Data.Return_Value := Py_None;
@@ -1080,6 +1103,7 @@ package body GNATCOLL.Scripts.Python is
    function First_Level_Getter
      (Obj : PyObject; Closure : System.Address) return PyObject
    is
+      Lock     : PyState.Ada_GIL_Lock;
       Prop     : constant Property_User_Data := Convert (Closure);
       Callback : Python_Callback_Data;
       Args     : PyObject;
@@ -1118,6 +1142,7 @@ package body GNATCOLL.Scripts.Python is
    function First_Level_Setter
      (Obj, Value : PyObject; Closure : System.Address) return Integer
    is
+      Lock     : PyState.Ada_GIL_Lock;
       Prop     : constant Property_User_Data := Convert (Closure);
       Callback : Python_Callback_Data;
       Args     : PyObject;
@@ -1257,6 +1282,7 @@ package body GNATCOLL.Scripts.Python is
      (Self   : not null access Python_Scripting_Record'Class;
       Name   : String) return PyObject
    is
+      Lock   : PyState.Ada_GIL_Lock;
       M, Tmp : PyObject := null;
       First  : Natural;
    begin
@@ -1498,6 +1524,7 @@ package body GNATCOLL.Scripts.Python is
       Hide_Exceptions : Boolean := False;
       Errors          : access Boolean) return String
    is
+      Lock   : PyState.Ada_GIL_Lock;
       Result : PyObject;
       Str    : PyObject;
    begin
@@ -1539,6 +1566,7 @@ package body GNATCOLL.Scripts.Python is
    --------------------------
 
    procedure Log_Python_Exception is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Typ, Occurrence, Traceback, S : PyObject;
    begin
       if Active (Me_Error) then
@@ -1569,6 +1597,7 @@ package body GNATCOLL.Scripts.Python is
       Hide_Exceptions : Boolean := False;
       Errors          : access Boolean) return PyObject
    is
+      Lock           : PyState.Ada_GIL_Lock;
       Result         : PyObject := null;
       Code           : PyCodeObject;
       Indented_Input : constant Boolean := Command'Length > 0
@@ -1812,15 +1841,19 @@ package body GNATCOLL.Scripts.Python is
          Errors := True;
          Insert_Error (Script, Console, "A command is already executing");
       else
-         Result := Run_Command
-           (Script, Get_Command (CL),
-            Console       => Console,
-            Need_Output   => False,
-            Hide_Output   => Hide_Output,
-            Show_Command  => Show_Command,
-            Errors        => E'Unchecked_Access);
-         Py_XDECREF (Result);
-         Errors := E;
+         declare
+            Lock : PyState.Ada_GIL_Lock with Unreferenced;
+         begin
+            Result := Run_Command
+              (Script, Get_Command (CL),
+               Console       => Console,
+               Need_Output   => False,
+               Hide_Output   => Hide_Output,
+               Show_Command  => Show_Command,
+               Errors        => E'Unchecked_Access);
+            Py_XDECREF (Result);
+            Errors := E;
+         end;
       end if;
    end Execute_Command;
 
@@ -1870,22 +1903,27 @@ package body GNATCOLL.Scripts.Python is
          Insert_Error (Script, Console, "A command is already executing");
          return False;
       else
-         Obj := Run_Command
-           (Script, Get_Command (CL),
-            Need_Output  => True,
-            Console      => Console,
-            Hide_Output  => Hide_Output,
-            Errors       => Errors);
-         Result := Obj /= null
-           and then ((PyInt_Check (Obj) and then PyInt_AsLong (Obj) = 1)
-                     or else (PyBool_Check (Obj) and then PyBool_Is_True (Obj))
-                     or else
-                       (PyString_Check (Obj)
-                        and then PyString_AsString (Obj) = "true")
-                     or else
-                       (PyUnicode_Check (Obj)
-                        and then Unicode_AsString (Obj) = "true"));
-         Py_XDECREF (Obj);
+         declare
+            Lock : PyState.Ada_GIL_Lock with Unreferenced;
+         begin
+            Obj := Run_Command
+              (Script, Get_Command (CL),
+               Need_Output  => True,
+               Console      => Console,
+               Hide_Output  => Hide_Output,
+               Errors       => Errors);
+            Result := Obj /= null
+              and then ((PyInt_Check (Obj) and then PyInt_AsLong (Obj) = 1)
+                        or else (PyBool_Check (Obj)
+                                 and then PyBool_Is_True (Obj))
+                        or else
+                          (PyString_Check (Obj)
+                           and then PyString_AsString (Obj) = "true")
+                        or else
+                          (PyUnicode_Check (Obj)
+                           and then Unicode_AsString (Obj) = "true"));
+            Py_XDECREF (Obj);
+         end;
          return Result;
       end if;
    end Execute_Command;
@@ -1901,17 +1939,20 @@ package body GNATCOLL.Scripts.Python is
    is
       Obj : PyObject;
       Errors : aliased Boolean;
-
    begin
       if Script.Blocked then
          return False;
       else
-         Obj := Run_Command
-           (Script,
-            Command     => Command,
-            Need_Output => True,
-            Console     => null,
-            Errors      => Errors'Unchecked_Access);
+         declare
+            Lock : PyState.Ada_GIL_Lock with Unreferenced;
+         begin
+            Obj := Run_Command
+              (Script,
+               Command     => Command,
+               Need_Output => True,
+               Console     => null,
+               Errors      => Errors'Unchecked_Access);
+         end;
 
          if Obj /= null and then PyFunction_Check (Obj) then
             return Execute_Command (Script, Obj, Args, Errors'Access);
@@ -1931,9 +1972,10 @@ package body GNATCOLL.Scripts.Python is
       Args    : Callback_Data'Class;
       Error   : access Boolean) return PyObject
    is
-      Obj   : PyObject;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Obj  : PyObject;
       Old, Args2, Item  : PyObject;
-      Size  : Integer;
+      Size : Integer;
 
    begin
       Error.all := False;
@@ -2027,8 +2069,9 @@ package body GNATCOLL.Scripts.Python is
       Args    : Callback_Data'Class;
       Error   : access Boolean) return String
    is
-      Obj : constant PyObject :=
-              Execute_Command (Script, Command, Args, Error);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Obj  : constant PyObject :=
+        Execute_Command (Script, Command, Args, Error);
    begin
       if Obj /= null
         and then PyString_Check (Obj)
@@ -2096,6 +2139,7 @@ package body GNATCOLL.Scripts.Python is
       Args    : Callback_Data'Class;
       Error   : access Boolean) return Boolean
    is
+      Lock   : PyState.Ada_GIL_Lock;
       Obj    : constant PyObject :=
                  Execute_Command (Script, Command, Args, Error);
       Result : Boolean;
@@ -2232,6 +2276,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Name_Parameters
      (Data  : in out Python_Callback_Data; Params : Param_Array)
    is
+      Lock      : PyState.Ada_GIL_Lock;
       First     : Integer := 0;
       Old_Args  : constant PyObject := Data.Args;
       Item      : PyObject;
@@ -2270,8 +2315,8 @@ package body GNATCOLL.Scripts.Python is
          end if;
 
          if Item /= null then
-            PyTuple_SetItem (Data.Args, 0, Item);
             Py_INCREF (Item);
+            PyTuple_SetItem (Data.Args, 0, Item);
          end if;
       end if;
 
@@ -2291,17 +2336,13 @@ package body GNATCOLL.Scripts.Python is
                Py_DECREF (Old_Args);
                raise Invalid_Parameter;
             end if;
-
-            Py_INCREF (Item);
-
          elsif N - Params'First + First < Nargs then
             Item := PyObject_GetItem (Old_Args, N - Params'First + First);
 
          else
             Item := Py_None;
-            Py_INCREF (Item);
          end if;
-
+         Py_INCREF (Item);
          PyTuple_SetItem (Data.Args, N - Params'First + First, Item);
       end loop;
 
@@ -2431,6 +2472,7 @@ package body GNATCOLL.Scripts.Python is
      (Data : Python_Callback_Data; N : Positive)
       return List_Instance'Class
    is
+      Lock    : PyState.Ada_GIL_Lock;
       Item    : PyObject;
       Success : Boolean;
       List    : Python_Callback_Data;
@@ -2473,6 +2515,7 @@ package body GNATCOLL.Scripts.Python is
      (Data : Python_Callback_Data; N : Positive)
       return Dictionary_Instance'Class
    is
+      Lock       : PyState.Ada_GIL_Lock;
       Item       : PyObject;
       Success    : Boolean;
       Dictionary : Python_Dictionary_Instance;
@@ -2643,6 +2686,7 @@ package body GNATCOLL.Scripts.Python is
       N       : Positive;
       Success : access Boolean) return Subprogram_Type
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Item : PyObject;
    begin
       Get_Param (Data, N, Item, Success.all);
@@ -2673,6 +2717,7 @@ package body GNATCOLL.Scripts.Python is
       Allow_Null : Boolean; Success : access Boolean)
       return Class_Instance
    is
+      Lock       : PyState.Ada_GIL_Lock;
       Item       : PyObject;
       C          : PyObject;
       Item_Class : PyObject;
@@ -2946,37 +2991,41 @@ package body GNATCOLL.Scripts.Python is
      (Inst : not null access Python_Class_Instance_Record)
       return access User_Data_List
    is
-      Item     : constant PyObject :=
-        PyObject_GetAttrString (Inst.Data, "__gps_data");
+      Item     : PyObject := null;
       Data     : PyObject;
       Tmp      : PyObject_Data;
       Tmp_Addr : System.Address;
    begin
-      if Item = null then
-         PyErr_Clear;  --  error about "no such attribute"
-
-         Tmp := new PyObject_Data_Record;
-         Data := PyC.PyCapsule_New
-           (Tmp.all'Address, On_PyObject_Data_Destroy'Access);
-         if PyObject_GenericSetAttrString (Inst.Data, "__gps_data", Data) /=
-           0
-         then
-            Trace (Me, "Error creating __gps_data");
-            PyErr_Clear;
-            Py_DECREF (Data);
-            Unchecked_Free (Tmp);
-            return null;
-         end if;
-
-         Py_DECREF (Data);
-
-         return Tmp.Props'Access;
-      else
-         Tmp_Addr := PyC.PyCapsule_GetPointer (Item);
-         Tmp := Convert (Tmp_Addr);
-         Py_DECREF (Item);
-         return Tmp.Props'Access;
+      if Lifecycle.Is_Finalized then
+         return null;
       end if;
+      declare
+         Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      begin
+         if PyObject_HasAttrString (Inst.Data, "__gps_data") then
+            Item := PyObject_GetAttrString (Inst.Data, "__gps_data");
+            Tmp_Addr := PyC.PyCapsule_GetPointer (Item);
+            Tmp := Convert (Tmp_Addr);
+            return Tmp.Props'Access;
+         else
+            PyErr_Clear;  --  error about "no such attribute"
+            Tmp := new PyObject_Data_Record;
+            Data := PyC.PyCapsule_New
+              (Tmp.all'Address, On_PyObject_Data_Destroy'Access);
+            if PyObject_SetAttrString (Inst.Data, "__gps_data", Data) /=
+              0
+            then
+               Trace (Me, "Error creating __gps_data");
+               PyErr_Clear;
+               Py_DECREF (Data);
+               Unchecked_Free (Tmp);
+               return null;
+            end if;
+
+            Py_DECREF (Data);
+            return Tmp.Props'Access;
+         end if;
+      end;
    end Get_User_Data;
 
    ------------------------------
@@ -3012,7 +3061,8 @@ package body GNATCOLL.Scripts.Python is
    function Get_CI
      (Script : Python_Scripting; Object : PyObject) return Class_Instance
    is
-      CI     : Python_Class_Instance;
+      CI   : Python_Class_Instance;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       PyErr_Clear;
       --  If there was no instance, avoid a python exception later
@@ -3022,7 +3072,6 @@ package body GNATCOLL.Scripts.Python is
       CI.Data := Object;   --  adopts the object
       Py_INCREF (Object);
       --  the class_instance needs to own one ref (decref'ed in Free)
-
       return R : Class_Instance do
          CI_Pointers.Set (R.Ref, CI);
       end return;
@@ -3035,7 +3084,11 @@ package body GNATCOLL.Scripts.Python is
    overriding procedure Free (Self : in out Python_Class_Instance_Record) is
    begin
       if not Finalized then
-         Py_XDECREF (Self.Data);
+         declare
+            Lock : PyState.Ada_GIL_Lock with Unreferenced;
+         begin
+            Py_XDECREF (Self.Data);
+         end;
       end if;
    end Free;
 
@@ -3101,6 +3154,7 @@ package body GNATCOLL.Scripts.Python is
       Key    : PyObject;
       Append : Boolean)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Obj, List : PyObject;
       Tmp : Integer;
       pragma Unreferenced (Tmp);
@@ -3159,7 +3213,8 @@ package body GNATCOLL.Scripts.Python is
       Key    : Integer;
       Append : Boolean := False)
    is
-      K : constant PyObject := PyInt_FromLong (long (Key));
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      K    : constant PyObject := PyInt_FromLong (long (Key));
    begin
       Prepare_Value_Key (Data, K, Append);
       Py_DECREF (K);
@@ -3174,7 +3229,8 @@ package body GNATCOLL.Scripts.Python is
       Key    : String;
       Append : Boolean := False)
    is
-      K : constant PyObject := PyString_FromString (Key);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      K    : constant PyObject := PyString_FromString (Key);
    begin
       Prepare_Value_Key (Data, K, Append);
       Py_DECREF (K);
@@ -3210,6 +3266,7 @@ package body GNATCOLL.Scripts.Python is
       Class : Class_Type := No_Class)
    is
       pragma Unreferenced (Size);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       Setup_Return_Value (Data);
       Data.Return_As_List := True;
@@ -3239,6 +3296,7 @@ package body GNATCOLL.Scripts.Python is
    is
       Num : Integer;
       pragma Unreferenced (Num);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       if Data.Return_As_List then
          Num := PyList_Append (Data.Return_Value, Value);
@@ -3256,7 +3314,8 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Return_Value
      (Data : in out Python_Callback_Data; Value : Integer)
    is
-      Val : constant PyObject := PyInt_FromLong (long (Value));
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Val  : constant PyObject := PyInt_FromLong (long (Value));
    begin
       Set_Return_Value (Data, Val);
       Py_DECREF (Val);
@@ -3269,7 +3328,8 @@ package body GNATCOLL.Scripts.Python is
    overriding procedure Set_Address_Return_Value
      (Data : in out Python_Callback_Data; Value : System.Address)
    is
-      Val : constant PyObject :=
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Val  : constant PyObject :=
         PyInt_FromSize_t (size_t (To_Integer (Value)));
    begin
       Set_Return_Value (Data, Val);
@@ -3283,7 +3343,8 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Return_Value
      (Data : in out Python_Callback_Data; Value : Float)
    is
-      Val : constant PyObject := PyFloat_FromDouble (double (Value));
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Val  : constant PyObject := PyFloat_FromDouble (double (Value));
    begin
       Set_Return_Value (Data, Val);
       Py_DECREF (Val);
@@ -3296,7 +3357,8 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Return_Value
      (Data : in out Python_Callback_Data; Value : String)
    is
-      Val : constant PyObject := PyString_FromString (Value);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Val  : constant PyObject := PyString_FromString (Value);
    begin
       Set_Return_Value (Data, Val);
       Py_DECREF (Val);
@@ -3309,7 +3371,8 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Return_Value
      (Data : in out Python_Callback_Data; Value : Boolean)
    is
-      Val : constant PyObject := PyBool_FromBoolean (Value);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Val  : constant PyObject := PyBool_FromBoolean (Value);
    begin
       Set_Return_Value (Data, Val);
       Py_DECREF (Val);
@@ -3322,10 +3385,11 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Return_Value
      (Data : in out Python_Callback_Data; Value : Class_Instance)
    is
-      V   : constant Python_Class_Instance :=
-              Python_Class_Instance (Get_CIR (Value));
-      Obj : PyObject;
-      Num : Integer;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      V    : constant Python_Class_Instance :=
+               Python_Class_Instance (Get_CIR (Value));
+      Obj  : PyObject;
+      Num  : Integer;
       pragma Unreferenced (Num);
    begin
       if V /= null then
@@ -3338,12 +3402,11 @@ package body GNATCOLL.Scripts.Python is
       end if;
 
       if Data.Return_As_List then
-         Num := PyList_Append (Data.Return_Value, Obj);  --  Increase refcount
---       Py_DECREF (Obj); --  The reference to Object is adopted by the result
+         Num := PyList_Append (Data.Return_Value, Obj);
       else
+         Py_INCREF (Obj);
          Setup_Return_Value (Data);
          Data.Return_Value := Obj;
-         Py_INCREF (Obj);
       end if;
    end Set_Return_Value;
 
@@ -3354,12 +3417,13 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Return_Value
      (Data : in out Python_Callback_Data; Value : List_Instance)
    is
-      V   : constant PyObject := Python_Callback_Data (Value).Args;
-      Num : Integer;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      V    : constant PyObject := Python_Callback_Data (Value).Args;
+      Num  : Integer;
       pragma Unreferenced (Num);
    begin
       if Data.Return_As_List then
-         Num := PyList_Append (Data.Return_Value, V);  --  Increase refcount
+         Num := PyList_Append (Data.Return_Value, V);
       else
          Py_INCREF (V);
          Setup_Return_Value (Data);
@@ -3376,7 +3440,8 @@ package body GNATCOLL.Scripts.Python is
       Class  : Class_Type := No_Class)
       return List_Instance'Class
    is
-      List    : Python_Callback_Data;
+      List : Python_Callback_Data;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       List.Script    := Python_Scripting (Script);
       List.First_Arg_Is_Self := False;
@@ -3426,46 +3491,49 @@ package body GNATCOLL.Scripts.Python is
       --
       --  ??? This API does not permit passing extra parameters to the call
 
-      Args := PyTuple_New (0);
-      Script.Ignore_Constructor := True;
-      Obj := PyObject_Call
-        (Object => Klass,
-         Args   => Args,
-         Kw     => null);   --  NOT: Py_None, which is not a valid dictionary
-      Script.Ignore_Constructor := False;
-      Py_DECREF (Args);
+      declare
+         Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      begin
+         Args := PyTuple_New (0);
+         Script.Ignore_Constructor := True;
+         Obj := PyObject_Call
+           (Object => Klass,
+            Args   => Args,
+            Kw     => null);   --  Py_None, which is not a valid dictionary
+         Script.Ignore_Constructor := False;
+         Py_DECREF (Args);
 
-      if Obj = null then
-         if Active (Me) then
-            Trace (Me, "Could not create instance");
-            PyErr_Print;    --  debugging only
+         if Obj = null then
+            if Active (Me) then
+               Trace (Me, "Could not create instance");
+               PyErr_Print;    --  debugging only
+            end if;
+            return No_Class_Instance;
          end if;
-         return No_Class_Instance;
-      end if;
 
-      if Active (Me) then
-         Assert
-           (Me, Get_Refcount (Obj) = 1,
-            "Object's refcount should be 1, got "
-            & Get_Refcount (Obj)'Img,
-            Raise_Exception => False);
-      end if;
+         if Active (Me) then
+            Assert
+              (Me, Get_Refcount (Obj) = 1,
+               "Object's refcount should be 1, got "
+               & Get_Refcount (Obj)'Img,
+               Raise_Exception => False);
+         end if;
 
-      Inst := Get_CI (Python_Scripting (Script), Obj);  --  increases refcount
-      Py_DECREF (Obj);
+         Inst := Get_CI (Python_Scripting (Script), Obj);  --  incr refcount
+         Py_DECREF (Obj);
 
-      --  The PyObject should have a single reference in the end, owned by
-      --  the class instance itself.
+         --  The PyObject should have a single reference in the end, owned by
+         --  the class instance itself.
 
-      if Active (Me) then
-         Assert
-           (Me,
-            Get_Refcount (Python_Class_Instance (Get_CIR (Inst)).Data) = 1,
-            "New_Instance should own a single refcount of PyObject, got "
-            & Print_Refcount (Get_CIR (Inst)),
-            Raise_Exception => False);
-      end if;
-
+         if Active (Me) then
+            Assert
+              (Me,
+               Get_Refcount (Python_Class_Instance (Get_CIR (Inst)).Data) = 1,
+               "New_Instance should own a single refcount of PyObject, got "
+               & Print_Refcount (Get_CIR (Inst)),
+               Raise_Exception => False);
+         end if;
+      end;
       return Inst;
 
    exception
@@ -3483,20 +3551,26 @@ package body GNATCOLL.Scripts.Python is
       Name : String) return Subprogram_Type
    is
       Inst : constant PyObject := Instance.Data;
-      Subp : constant PyObject :=
-        PyObject_GetAttrString (Inst, Name => Name);
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      Res  : Subprogram_Type := null;
    begin
-      if Subp = null then
+      declare
+         Subp : constant PyObject :=
+            PyObject_GetAttrString (Inst, Name => Name);
+      begin
 
-         --  Clear the raised python exception
-         PyErr_Clear;
+         if Subp = null then
 
-         return null;
-      else
-         return new Python_Subprogram_Record'
-           (Script     => Python_Scripting (Instance.Script),
-            Subprogram => Subp);
-      end if;
+            --  Clear the raised python exception
+            PyErr_Clear;
+         else
+            Py_INCREF (Subp);
+            Res := new Python_Subprogram_Record'
+              (Script     => Python_Scripting (Instance.Script),
+               Subprogram => Subp);
+         end if;
+      end;
+      return Res;
    end Get_Method;
 
    --------------------
@@ -3621,6 +3695,7 @@ package body GNATCOLL.Scripts.Python is
       Args       : Callback_Data'Class;
       Error      : not null access Boolean) return GNAT.Strings.String_List
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Obj : constant PyObject := Execute_Command
         (Script => Subprogram.Script,
          Command => Subprogram.Subprogram,
@@ -3679,7 +3754,11 @@ package body GNATCOLL.Scripts.Python is
    procedure Free (Subprogram : in out Python_Subprogram_Record) is
    begin
       if not Finalized then
-         Py_DECREF (Subprogram.Subprogram);
+         declare
+            Lock : PyState.Ada_GIL_Lock with Unreferenced;
+         begin
+            Py_DECREF (Subprogram.Subprogram);
+         end;
       end if;
    end Free;
 
@@ -3690,6 +3769,7 @@ package body GNATCOLL.Scripts.Python is
    function Get_Name
      (Subprogram : access Python_Subprogram_Record) return String
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       S    : constant PyObject := PyObject_Str (Subprogram.Subprogram);
       Name : constant String := PyString_AsString (S);
    begin
@@ -3761,7 +3841,8 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : Integer)
    is
-      Val : PyObject;
+      Lock   : PyState.Ada_GIL_Lock;
+      Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
    begin
@@ -3774,7 +3855,8 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : Float)
    is
-      Val : PyObject;
+      Lock   : PyState.Ada_GIL_Lock;
+      Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
    begin
@@ -3787,7 +3869,8 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : Boolean)
    is
-      Val : PyObject;
+      Lock   : PyState.Ada_GIL_Lock;
+      Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
    begin
@@ -3800,7 +3883,8 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : String)
    is
-      Val : PyObject;
+      Lock   : PyState.Ada_GIL_Lock;
+      Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
    begin
@@ -3930,37 +4014,38 @@ package body GNATCOLL.Scripts.Python is
       Func   : PyObject;
       Errors : aliased Boolean;
       Result : PyObject;
-
    begin
       if Script.Blocked then
          Set_Error_Msg (Args, "A command is already executing");
       else
-         --  Fetch a handle on the function to execute. What we want to execute
-         --  is:
-         --     func = module.function_name
-         --     func(args)
-         Func := Run_Command
-           (Script,
-            Command     => Command,
-            Hide_Output => Hide_Output,
-            Need_Output => True,
-            Errors      => Errors'Access);
+         declare
+            Lock : PyState.Ada_GIL_Lock with Unreferenced;
+         begin
+            --  Fetch a handle on the function to execute. What we want to
+            --  execute is:
+            --     func = module.function_name
+            --     func(args)
+            Func := Run_Command
+              (Script,
+               Command     => Command,
+               Hide_Output => Hide_Output,
+               Need_Output => True,
+               Errors      => Errors'Access);
+            if Func /= null and then PyCallable_Check (Func) then
+               Setup_Return_Value (Args);
+               Result := Execute_Command (Script, Func, Args, Errors'Access);
 
-         if Func /= null and then PyCallable_Check (Func) then
-            Setup_Return_Value (Args);
-            Result := Execute_Command (Script, Func, Args, Errors'Access);
-
-            if Errors then
-               Py_XDECREF (Result);
-               PyErr_Clear;
-               raise Error_In_Command with "Error in '" & Command & "()'";
+               if Errors then
+                  Py_XDECREF (Result);
+                  PyErr_Clear;
+                  raise Error_In_Command with "Error in '" & Command & "()'";
+               else
+                  Args.Return_Value := Result;  --  Adopts a reference
+               end if;
             else
-               Args.Return_Value := Result;  --  Adopts a reference
+               raise Error_In_Command with Command & " is not a function";
             end if;
-
-         else
-            raise Error_In_Command with Command & " is not a function";
-         end if;
+         end;
       end if;
    end Execute_Command;
 
@@ -4044,8 +4129,9 @@ package body GNATCOLL.Scripts.Python is
    overriding function Return_Value
      (Data : Python_Callback_Data) return List_Instance'Class
    is
-      List    : Python_Callback_Data;
-      Iter    : PyObject;
+      List : Python_Callback_Data;
+      Iter : PyObject;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       List.Script    := Data.Script;
       List.First_Arg_Is_Self := False;
@@ -4099,8 +4185,8 @@ package body GNATCOLL.Scripts.Python is
    function Has_Key
      (Self : Python_Dictionary_Instance; Key : String) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyString_FromString (Key);
-
    begin
       return Result : constant Boolean := PyDict_Contains (Self.Dict, K) do
          Py_DECREF (K);
@@ -4114,8 +4200,8 @@ package body GNATCOLL.Scripts.Python is
    function Has_Key
      (Self : Python_Dictionary_Instance; Key : Integer) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyInt_FromLong (Interfaces.C.long (Key));
-
    begin
       return Result : constant Boolean := PyDict_Contains (Self.Dict, K) do
          Py_DECREF (K);
@@ -4129,8 +4215,8 @@ package body GNATCOLL.Scripts.Python is
    function Has_Key
      (Self : Python_Dictionary_Instance; Key : Float) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyFloat_FromDouble (Interfaces.C.double (Key));
-
    begin
       return Result : constant Boolean := PyDict_Contains (Self.Dict, K) do
          Py_DECREF (K);
@@ -4144,8 +4230,8 @@ package body GNATCOLL.Scripts.Python is
    function Has_Key
      (Self : Python_Dictionary_Instance; Key : Boolean) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyBool_FromBoolean (Key);
-
    begin
       return Result : constant Boolean := PyDict_Contains (Self.Dict, K) do
          Py_DECREF (K);
@@ -4345,9 +4431,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : String) return String
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyUnicode_FromString (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4361,9 +4447,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Integer) return String
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyInt_FromLong (Interfaces.C.long (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4377,9 +4463,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Float) return String
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyFloat_FromDouble (Interfaces.C.double (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4392,9 +4478,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Boolean) return String
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyBool_FromBoolean (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4408,9 +4494,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : String) return Integer
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyUnicode_FromString (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4424,9 +4510,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Integer) return Integer
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyInt_FromLong (Interfaces.C.long (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4440,9 +4526,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Float) return Integer
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyFloat_FromDouble (Interfaces.C.double (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4456,9 +4542,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Boolean) return Integer
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyBool_FromBoolean (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4472,9 +4558,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : String) return Float
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyUnicode_FromString (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4488,9 +4574,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Integer) return Float
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyInt_FromLong (Interfaces.C.long (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4504,9 +4590,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Float) return Float
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyFloat_FromDouble (Interfaces.C.double (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4520,9 +4606,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Boolean) return Float
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyBool_FromBoolean (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4536,9 +4622,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : String) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyUnicode_FromString (Key);
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4552,9 +4638,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Integer) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyInt_FromLong (Interfaces.C.long (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4568,9 +4654,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Float) return Boolean
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       K : constant PyObject := PyFloat_FromDouble (Interfaces.C.double (Key));
       V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
    begin
       Py_DECREF (K);
 
@@ -4584,9 +4670,9 @@ package body GNATCOLL.Scripts.Python is
    function Value
      (Self : Python_Dictionary_Instance; Key : Boolean) return Boolean
    is
-      K : constant PyObject := PyBool_FromBoolean (Key);
-      V : constant PyObject := PyDict_GetItem (Self.Dict, K);
-
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      K    : constant PyObject := PyBool_FromBoolean (Key);
+      V    : constant PyObject := PyDict_GetItem (Self.Dict, K);
    begin
       Py_DECREF (K);
 
@@ -4749,7 +4835,7 @@ package body GNATCOLL.Scripts.Python is
    is
       pragma Unreferenced (User_Arg);
       pragma Unreferenced (Object);
-
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
    begin
       if Why in PyTrace_Call | PyTrace_C_Call then
          if Last_Call_Frame /= null then

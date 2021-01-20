@@ -20,47 +20,25 @@
 -- <http://www.gnu.org/licenses/>.                                          --
 --                                                                          --
 ------------------------------------------------------------------------------
---  Subprograms to manipulate GIL state and wrapper to simplify such
---  operations in Ada code.
 
-with Ada.Finalization;
+package body GNATCOLL.Python.State is
 
-package GNATCOLL.Python.State is
+   ----------------
+   -- Initialize --
+   ----------------
 
-   type Ada_GIL_Lock is new Ada.Finalization.Limited_Controlled with private;
-   --  This type is a wrapper around PyGILState_Ensure/Release, to avoid
-   --  manual call to release, especially in the case of an exception.
+   overriding procedure Initialize (Self : in out Ada_GIL_Lock) is
+   begin
+      Self.State := PyGILState_Ensure;
+   end Initialize;
 
-   type PyGILState_STATE is private;
+   --------------
+   -- Finalize --
+   --------------
 
-   PyGILState_LOCKED : constant PyGILState_STATE;
-   PyGILState_UNLOCKED : constant PyGILState_STATE;
-
-   function PyGILState_Ensure return PyGILState_STATE;
-   pragma Import (C, PyGILState_Ensure, "ada_PyGILState_Ensure");
-   --  Ensure that the current thread is ready to call the Python C API
-   --  regardless of the current state of Python, or of the global
-   --  interpreter lock. This may be called as many times as desired by a
-   --  thread as long as each call is matched with a call to
-   --  PyGILState_Release().
-
-   procedure PyGILState_Release (State : PyGILState_STATE);
-   pragma Import (C, PyGILState_Release, "ada_PyGILState_Release");
-   --  Release any resources previously acquired. After this call, Python's
-   --  state will be the same as it was prior to the corresponding
-   --  PyGILState_Ensure().
-
-private
-   overriding procedure Initialize (Self : in out Ada_GIL_Lock);
-   overriding procedure Finalize (Self : in out Ada_GIL_Lock);
-
-   type Ada_GIL_Lock is new Ada.Finalization.Limited_Controlled with record
-      State : PyGILState_STATE;
-   end record;
-
-   type PyGILState_STATE is new Integer;
-
-   PyGILState_LOCKED : constant PyGILState_STATE := 0;
-   PyGILState_UNLOCKED : constant PyGILState_STATE := 1;
+   overriding procedure Finalize (Self : in out Ada_GIL_Lock) is
+   begin
+      PyGILState_Release (Self.State);
+   end Finalize;
 
 end GNATCOLL.Python.State;

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2020, AdaCore                     --
+--                     Copyright (C) 2003-2021, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -146,16 +146,9 @@ package GNATCOLL.Python is
    --  Whether a specific attribute exists for the object
 
    function PyObject_GetAttrString
-     (Object : PyObject;
-      Name   : Interfaces.C.Strings.chars_ptr) return PyObject;
-   pragma Import (C, PyObject_GetAttrString, "PyObject_GetAttrString");
+     (Object : PyObject; Name : String) return PyObject;
    --  Lookup an attribute in the object's dictionnary.
    --  The returned object *must* be DECREF.
-
-   function PyObject_GetAttrString
-     (Object : PyObject; Name : String) return PyObject;
-   --  Same as above.
-   --  The returned object must be DECREF.
 
    function PyObject_Dir (Object : PyObject) return PyObject;
    --  A list of strings for all entries in Object's dictionary..

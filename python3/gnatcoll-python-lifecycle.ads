@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                       Copyright (C) 2020, AdaCore                        --
+--                       Copyright (C) 2020-2021, AdaCore                   --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -95,6 +95,8 @@ package GNATCOLL.Python.Lifecycle is
    --  the last call to Py_Initialize(). Ideally, this frees all memory
    --  allocated by the Python interpreter. This is a no-op when called for a
    --  second time (without calling Py_Initialize() again first).
+
+   function Is_Finalized return Boolean;
 
    function Py_Finalize return Boolean;
    --  Same as previous function but return True if finalization managed to
