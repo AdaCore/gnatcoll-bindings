@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 --                          G N A T C O L L                                 --
 --                                                                          --
---                     Copyright (C) 2003-2020, AdaCore                     --
+--                     Copyright (C) 2003-2021, AdaCore                     --
 --                                                                          --
 -- This is free software;  you can redistribute it  and/or modify it  under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -140,6 +140,9 @@ ada_py_initialize_and_module(char* program_name, char* name) {
 
    PyImport_AppendInittab(user_module_name, init_user_module);
    Py_InitializeEx(0);
+#ifdef WITH_THREAD
+   PyEval_InitThreads();
+#endif
 
    // Initialize the prompt if needed
 
@@ -795,9 +798,15 @@ PyThreadState* ada_PyGILState_GetThisThreadState() {
 
 int ada_PyGILState_Ensure() {
 #ifdef WITH_THREAD
-   return PyGILState_Ensure();
+   return (int)PyGILState_Ensure();
 #else
    return 0;
+#endif
+}
+
+void ada_PyGILState_Release(int state) {
+#ifdef WITH_THREAD
+   PyGILState_Release((PyGILState_STATE)state);
 #endif
 }
 
