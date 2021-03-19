@@ -797,16 +797,21 @@ PyThreadState* ada_PyGILState_GetThisThreadState() {
 }
 
 int ada_PyGILState_Ensure() {
+  if (Py_IsInitialized ()) {
 #ifdef WITH_THREAD
-   return (int)PyGILState_Ensure();
+    return (int)PyGILState_Ensure();
 #else
-   return 0;
+    return 0;
 #endif
+  }
+  return 0;
 }
 
 void ada_PyGILState_Release(int state) {
 #ifdef WITH_THREAD
-   PyGILState_Release((PyGILState_STATE)state);
+  if (Py_IsInitialized ()) {
+    PyGILState_Release((PyGILState_STATE)state);
+  }
 #endif
 }
 
