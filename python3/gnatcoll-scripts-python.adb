@@ -909,7 +909,7 @@ package body GNATCOLL.Scripts.Python is
    is
       --  Args and Kw could both be null, as called from PyCFunction_Call
 
-      Lock     : PyState.Ada_GIL_Lock;
+      Lock     : PyState.Ada_GIL_Lock with Unreferenced;
       Handler  : Handler_Data_Access;
       Size     : Integer := 0;
       Callback : Python_Callback_Data;
@@ -1103,7 +1103,7 @@ package body GNATCOLL.Scripts.Python is
    function First_Level_Getter
      (Obj : PyObject; Closure : System.Address) return PyObject
    is
-      Lock     : PyState.Ada_GIL_Lock;
+      Lock     : PyState.Ada_GIL_Lock with Unreferenced;
       Prop     : constant Property_User_Data := Convert (Closure);
       Callback : Python_Callback_Data;
       Args     : PyObject;
@@ -1142,7 +1142,7 @@ package body GNATCOLL.Scripts.Python is
    function First_Level_Setter
      (Obj, Value : PyObject; Closure : System.Address) return Integer
    is
-      Lock     : PyState.Ada_GIL_Lock;
+      Lock     : PyState.Ada_GIL_Lock with Unreferenced;
       Prop     : constant Property_User_Data := Convert (Closure);
       Callback : Python_Callback_Data;
       Args     : PyObject;
@@ -1282,7 +1282,7 @@ package body GNATCOLL.Scripts.Python is
      (Self   : not null access Python_Scripting_Record'Class;
       Name   : String) return PyObject
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       M, Tmp : PyObject := null;
       First  : Natural;
    begin
@@ -1524,7 +1524,7 @@ package body GNATCOLL.Scripts.Python is
       Hide_Exceptions : Boolean := False;
       Errors          : access Boolean) return String
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       Result : PyObject;
       Str    : PyObject;
    begin
@@ -1597,7 +1597,7 @@ package body GNATCOLL.Scripts.Python is
       Hide_Exceptions : Boolean := False;
       Errors          : access Boolean) return PyObject
    is
-      Lock           : PyState.Ada_GIL_Lock;
+      Lock           : PyState.Ada_GIL_Lock with Unreferenced;
       Result         : PyObject := null;
       Code           : PyCodeObject;
       Indented_Input : constant Boolean := Command'Length > 0
@@ -2139,7 +2139,7 @@ package body GNATCOLL.Scripts.Python is
       Args    : Callback_Data'Class;
       Error   : access Boolean) return Boolean
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       Obj    : constant PyObject :=
                  Execute_Command (Script, Command, Args, Error);
       Result : Boolean;
@@ -2276,7 +2276,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Name_Parameters
      (Data  : in out Python_Callback_Data; Params : Param_Array)
    is
-      Lock      : PyState.Ada_GIL_Lock;
+      Lock      : PyState.Ada_GIL_Lock with Unreferenced;
       First     : Integer := 0;
       Old_Args  : constant PyObject := Data.Args;
       Item      : PyObject;
@@ -2472,7 +2472,7 @@ package body GNATCOLL.Scripts.Python is
      (Data : Python_Callback_Data; N : Positive)
       return List_Instance'Class
    is
-      Lock    : PyState.Ada_GIL_Lock;
+      Lock    : PyState.Ada_GIL_Lock with Unreferenced;
       Item    : PyObject;
       Success : Boolean;
       List    : Python_Callback_Data;
@@ -2515,7 +2515,7 @@ package body GNATCOLL.Scripts.Python is
      (Data : Python_Callback_Data; N : Positive)
       return Dictionary_Instance'Class
    is
-      Lock       : PyState.Ada_GIL_Lock;
+      Lock       : PyState.Ada_GIL_Lock with Unreferenced;
       Item       : PyObject;
       Success    : Boolean;
       Dictionary : Python_Dictionary_Instance;
@@ -2717,7 +2717,7 @@ package body GNATCOLL.Scripts.Python is
       Allow_Null : Boolean; Success : access Boolean)
       return Class_Instance
    is
-      Lock       : PyState.Ada_GIL_Lock;
+      Lock       : PyState.Ada_GIL_Lock with Unreferenced;
       Item       : PyObject;
       C          : PyObject;
       Item_Class : PyObject;
@@ -3841,7 +3841,7 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : Integer)
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
@@ -3855,7 +3855,7 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : Float)
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
@@ -3869,7 +3869,7 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : Boolean)
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
@@ -3883,7 +3883,7 @@ package body GNATCOLL.Scripts.Python is
      (Instance : access Python_Class_Instance_Record;
       Name     : String; Value : String)
    is
-      Lock   : PyState.Ada_GIL_Lock;
+      Lock   : PyState.Ada_GIL_Lock with Unreferenced;
       Val    : PyObject;
       Result : Integer;
       pragma Unreferenced (Result);
