@@ -1,0 +1,6 @@
+Code-Review+2: Vasiliy Fofanov <fofanov@adacore.com>
+Submitted-by: Dmitriy Anisimkov <anisimko@adacore.com>
+Submitted-at: Tue, 23 Mar 2021 16:51:44 +0100
+Reviewed-on: https://git.adacore.com/c/gnatcoll-bindings/+/90791
+Project: gnatcoll-bindings
+Branch: refs/heads/master
