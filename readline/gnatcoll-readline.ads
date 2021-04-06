@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2012-2017, AdaCore                     --
+--                     Copyright (C) 2012-2021, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -120,6 +120,4 @@ package GNATCOLL.Readline is
 
 private
    type Possible_Completions_Array is null record;
-
-   pragma Linker_Options ("-lreadline");
 end GNATCOLL.Readline;

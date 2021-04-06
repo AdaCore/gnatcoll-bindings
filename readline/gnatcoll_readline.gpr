@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_Readline is
+library project GnatColl_Readline is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_readline";
@@ -42,19 +42,19 @@ project GnatColl_Readline is
    for Library_Dir
       use "lib/" & Project'Library_Kind;
    for Library_Name    use Name;
-   for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
+
+   Link_Opts := ("-lreadline");
 
    case Library_Type is
       when "relocatable" =>
-         for Library_Options use ("-lreadline");
+         for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
+         for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
+         for Library_Options use Link_Opts;
       when others =>
          null;
    end case;
 
    for Languages use ("Ada");
-
-   type OS_Kind is ("windows", "unix", "osx");
-   OS : OS_Kind := External ("GNATCOLL_OS", "unix");
 
    package Compiler is
       case Build is
@@ -68,7 +68,13 @@ project GnatColl_Readline is
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
       end case;
 
+      for Switches ("Ada") use Compiler'Switches ("Ada")
+        & External_As_List ("ADAFLAGS", " ");
    end Compiler;
+
+   package Linker is
+      for Linker_Options use Link_Opts;
+   end Linker;
 
    package Binder is
       case Build is

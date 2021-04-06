@@ -23,7 +23,7 @@
 
 with "gnatcoll";
 
-project GnatColl_Python is
+library project GnatColl_Python is
 
    Version := External ("GNATCOLL_VERSION", "0.0");
    Name    := "gnatcoll_python";
@@ -35,8 +35,8 @@ project GnatColl_Python is
    type Library_Type_Type is ("relocatable", "static", "static-pic");
    Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
 
-   Python_CFLAGS := External("GNATCOLL_PYTHON_CFLAGS", "");
-   Python_Libs := External("GNATCOLL_PYTHON_LIBS", "");
+   Python_CFLAGS     := External_As_List ("GNATCOLL_PYTHON_CFLAGS", " ");
+   Python_Libs       := External_As_List ("GNATCOLL_PYTHON_LIBS", " ");
    Python_Static_Lib := External("GNATCOLL_PYTHON_STATIC_LIB", "");
    Libpython_Kind := External("GNATCOLL_LIBPYTHON_KIND", "shared");
 
@@ -47,18 +47,16 @@ project GnatColl_Python is
    for Library_Dir
       use "lib/" & Project'Library_Kind;
    for Library_Name    use Name;
-   for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
 
    for Languages use ("Ada", "C");
 
-   type OS_Kind is ("windows", "unix", "osx");
-   OS : OS_Kind := External ("GNATCOLL_OS", "unix");
-
    case Library_Type is
       when "relocatable" =>
+         for Library_Version use "lib" & Name & Gnatcoll.So_Ext & "." & Version;
+         for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
          case Libpython_Kind is
             when "shared" =>
-               for Library_Options use Split(Python_Libs, " ");
+               for Library_Options use Python_Libs;
          end case;
       when others =>
          null;
@@ -70,13 +68,18 @@ project GnatColl_Python is
             for Switches ("Ada") use
               ("-g", "-O0", "-gnata", "-gnatVa", "-gnatQ", "-gnaty", "-gnateE",
                "-gnatwaCJe", "-fstack-check");
-            for Switches ("C") use ("-g", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
+            for Switches ("C") use ("-g", "-Wunreachable-code") & Python_CFLAGS;
 
          when "PROD" =>
             --  Do not use -gnatwe for production mode
             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
-            for Switches ("C") use ("-O2", "-Wunreachable-code") & Split(Python_CFLAGS, " ");
+            for Switches ("C") use ("-O2", "-Wunreachable-code") & Python_CFLAGS;
       end case;
+      for Switches ("Ada") use Compiler'Switches ("Ada")
+        & External_As_List ("ADAFLAGS", " ");
+      for Switches ("C") use Compiler'Switches ("C")
+        & External_As_List ("CFLAGS", " ")
+        & External_As_List ("CPPFLAGS", " ");
    end Compiler;
 
    package Binder is
@@ -100,9 +103,9 @@ project GnatColl_Python is
    package Linker is
       case Libpython_Kind is
          when "shared" =>
-            for Linker_Options use Split(Python_Libs, " ");
+            for Linker_Options use Python_Libs;
          when others =>
-            for Linker_Options use (Python_Static_Lib) & Split(Python_Libs, " ");
+            for Linker_Options use (Python_Static_Lib) & Python_Libs;
       end case;
    end Linker;
 
