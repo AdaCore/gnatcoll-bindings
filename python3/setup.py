@@ -92,6 +92,8 @@ def fetch_python_config(config):
     if os.path.isfile(libpython_a):
         config.set_data('GNATCOLL_PYTHON_STATIC_LIB',
                         libpython_a, sub='gprbuild')
+    else:
+        logging.info('static python library not found')
 
     if sys.platform.startswith('linux'):
         # On Linux platform, even when linking with the static libpython,
@@ -192,19 +194,22 @@ class GNATCollPython(SetupApp):
 
     def install(self, args):
         config = Config()
-        python_la = config.data["gprbuild"]["GNATCOLL_PYTHON_STATIC_LIB"]
-        prefix = config.data["prefix"]
-        target = os.path.join(
-            "..", "..", "lib", "gnatcoll_python.static",
-            os.path.basename(python_la)
-        )
-        config.set_data("GNATCOLL_PYTHON_STATIC_LIB", target, sub='gprbuild')
-        config.save_data()
+        has_static_python = "GNATCOLL_PYTHON_STATIC_LIB" in config.data["gprbuild"]
+        if has_static_python:
+            python_la = config.data["gprbuild"]["GNATCOLL_PYTHON_STATIC_LIB"]
+            prefix = config.data["prefix"]
+            target = os.path.join(
+                "..", "..", "lib", "gnatcoll_python.static",
+                os.path.basename(python_la)
+            )
+            config.set_data("GNATCOLL_PYTHON_STATIC_LIB", target, sub='gprbuild')
+            config.save_data()
         super(GNATCollPython, self).install(args)
 
-        # Copy over the libpython*.la
-        shutil.copy(
-            python_la, os.path.join(prefix, "lib", "gnatcoll_python.static"))
+        if has_static_python:
+            # Copy over the libpython*.la
+            shutil.copy(
+                python_la, os.path.join(prefix, "lib", "gnatcoll_python.static"))
 
 
 if __name__ == '__main__':
