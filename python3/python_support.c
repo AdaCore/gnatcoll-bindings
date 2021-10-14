@@ -116,6 +116,18 @@ ada_py_initialize_and_module(char* program_name, char* name) {
    user_module.m_name = user_module_name;
    Py_SetProgramName (Py_DecodeLocale (program_name, NULL));
 
+   PyStatus status;
+   PyPreConfig preconfig;
+
+   PyPreConfig_InitPythonConfig(&preconfig);
+
+   preconfig.utf8_mode = 1;
+
+   status = Py_PreInitialize(&preconfig);
+   if (PyStatus_Exception(status)) {
+     Py_ExitStatusException(status);
+   }
+
    PyImport_AppendInittab(user_module_name, init_user_module);
    Py_InitializeEx(0);
 
@@ -235,6 +247,9 @@ PyDescr_NewAdaMethod(PyTypeObject *type, PyObject* cfunc, const char* name)
     // to internally dispatch and call cfunc
     PyAdaMethodDescr_Type.tp_descr_get = (descrgetfunc)adamethod_descr_get;
     PyAdaMethodDescr_Type.tp_call = (ternaryfunc)adamethod_descr_call;
+    PyAdaMethodDescr_Type.tp_flags =
+        Py_TPFLAGS_DEFAULT && !(Py_TPFLAGS_HAVE_VECTORCALL);
+    PyAdaMethodDescr_Type.tp_vectorcall = NULL;
   }
 
   PyAdaMethodDescrObject *descr = (PyAdaMethodDescrObject*) PyType_GenericAlloc

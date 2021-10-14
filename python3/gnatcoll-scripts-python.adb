@@ -770,6 +770,7 @@ package body GNATCOLL.Scripts.Python is
      (Script          : access Python_Scripting_Record;
       Arguments_Count : Natural) return Callback_Data'Class
    is
+      Lock : GNATCOLL.Python.State.Ada_GIL_Lock with Unreferenced;
       Callback : constant Python_Callback_Data :=
         (Callback_Data with
          Script           => Python_Scripting (Script),
@@ -878,6 +879,7 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data; N : Positive; Value : Class_Instance)
    is
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
       Inst : PyObject;
    begin
       if Value = No_Class_Instance then
@@ -895,7 +897,8 @@ package body GNATCOLL.Scripts.Python is
    procedure Set_Nth_Arg
      (Data : in out Python_Callback_Data; N : Positive; Value : List_Instance)
    is
-      V : constant PyObject := Python_Callback_Data (Value).Args;
+      Lock : PyState.Ada_GIL_Lock with Unreferenced;
+      V    : constant PyObject := Python_Callback_Data (Value).Args;
    begin
       Set_Item (Data.Args, N - 1, V);  --  Increments refcount
    end Set_Nth_Arg;
