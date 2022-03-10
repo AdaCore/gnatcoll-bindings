@@ -12,6 +12,7 @@ b__*
 gnatinspect.*
 obj/
 lib/
+install/
 *.stdout
 *.stderr
 *.ali
