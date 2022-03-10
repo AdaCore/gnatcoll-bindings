@@ -41,12 +41,6 @@ class BasicTestDriver(GNATcollTestDriver):
 
     def build(self, previous_values, slot):
         """Build fragment."""
-        skip = self.should_skip()
-        if skip is not None:
-            self.result.set_status(skip)
-            self.push_result()
-            return False
-
         if self.test_env.get("no-coverage"):
             gpr_project_path = self.env.gnatcoll_prod_gpr_dir
         else:
