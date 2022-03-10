@@ -1,8 +1,10 @@
+import os
+
 from e3.fs import cp
 from e3.testsuite.result import TestStatus
+
 from drivers import gprbuild, GNATcollTestDriver
 from drivers.valgrind import check_call_valgrind
-import os
 
 
 class BasicTestDriver(GNATcollTestDriver):
@@ -31,13 +33,13 @@ class BasicTestDriver(GNATcollTestDriver):
         :param dag: tree of test fragment to amend
         :type dag: e3.collection.dag.DAG
         """
-        self.add_fragment(dag, 'build')
-        self.add_fragment(dag, 'check_run', after=['build'])
+        self.add_fragment(dag, "build")
+        self.add_fragment(dag, "check_run", after=["build"])
 
-        if 'test_exe' not in self.test_env:
-            self.test_env['test_exe'] = 'obj/test'
+        if "test_exe" not in self.test_env:
+            self.test_env["test_exe"] = "obj/test"
 
-    def build(self, previous_values):
+    def build(self, previous_values, slot):
         """Build fragment."""
         skip = self.should_skip()
         if skip is not None:
@@ -45,27 +47,35 @@ class BasicTestDriver(GNATcollTestDriver):
             self.push_result()
             return False
 
-        if self.test_env.get('no-coverage'):
+        if self.test_env.get("no-coverage"):
             gpr_project_path = self.env.gnatcoll_prod_gpr_dir
         else:
             gpr_project_path = self.env.gnatcoll_gpr_dir
-        return gprbuild(self, gcov=self.env.gcov,
-                        gpr_project_path=gpr_project_path)
+        return gprbuild(
+            self, gcov=self.env.gcov, gpr_project_path=gpr_project_path
+        )
 
-    def check_run(self, previous_values):
+    def check_run(self, previous_values, slot):
         """Check status fragment."""
-        if not previous_values['build']:
+        if not previous_values["build"]:
             return
 
-        for data in self.test_env.get('data', []):
-            cp(os.path.join(self.test_env['test_dir'], data),
-               self.test_env['working_dir'], recursive=True)
+        for data in self.test_env.get("data", []):
+            cp(
+                os.path.join(self.test_env["test_dir"], data),
+                self.test_env["working_dir"],
+                recursive=True,
+            )
 
         process = check_call_valgrind(
             self,
-            [os.path.join(self.test_env['working_dir'],
-                          self.test_env['test_exe'])])
-        if '<=== TEST PASSED ===>' not in process.out:
+            [
+                os.path.join(
+                    self.test_env["working_dir"], self.test_env["test_exe"]
+                )
+            ],
+        )
+        if "<=== TEST PASSED ===>" not in process.out:
             self.result.set_status(TestStatus.FAIL)
         else:
             self.result.set_status(TestStatus.PASS)
