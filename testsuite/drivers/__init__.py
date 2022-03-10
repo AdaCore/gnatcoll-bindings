@@ -21,7 +21,9 @@ GNATCOLL_ROOT_DIR = os.path.dirname(TESTSUITE_ROOT_DIR)
 PROJECT = {
     "gmp": "gnatcoll_gmp.gpr",
     "iconv": "gnatcoll_iconv.gpr",
+    "lzma": "gnatcoll_lzma.gpr",
     "omp": "gnatcoll_omp.gpr",
+    "zlib": "gnatcoll_zlib.gpr",
 }
 
 
