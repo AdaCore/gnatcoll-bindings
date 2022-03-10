@@ -30,3 +30,7 @@ setup.json
 */docs/_build
 
 examples/library/obj
+
+out
+/testsuite/prod
+/testsuite/gcov
