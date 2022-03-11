@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2009-2017, AdaCore                     --
+--                     Copyright (C) 2009-2022, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -73,6 +73,13 @@ package GNATCOLL.GMP.Lib is
    type gmp_randstate_t is limited private;
    --  Following the C interface, clients are not intended to access the
    --  fields of this type for the sake of upward compatibility. Nor are they
+   --  intended to do simple copying via assignment or comparisons via
+   --  predefined equality. We use a limited private type to enforce those
+   --  expectations.
+
+   type mpq_t is limited private;
+   --  Following the C interface, clients are not intended to access the fields
+   --  of this type, for the sake of upward compatibility. Nor are they
    --  intended to do simple copying via assignment or comparisons via
    --  predefined equality. We use a limited private type to enforce those
    --  expectations.
@@ -321,6 +328,96 @@ package GNATCOLL.GMP.Lib is
       return Long;
    pragma Import (C, gmp_urandomm_ui, "__gmp_urandomm_ui");
 
+--  Rational Number Functions
+
+   procedure mpq_canonicalize (this : access constant mpq_t) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_canonicalize";
+   --  Remove any factors that are common to the numerator and denominator of
+   --  This, and make the denominator positive.
+
+   --  Initialization and Assignment
+
+   procedure mpq_init (this : access mpq_t) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_init";
+   --  Initialize this and set it to 0/1. Each variable should normally only be
+   --  initialized once, or at least cleared out (using the function mpq_clear)
+   --  between each initialization. NOTE: since we automatically handle memory
+   --  management through controlled type, we perform this check directly in
+   --  the Set functions.
+
+   procedure mpq_clear (this : access mpq_t) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_clear";
+   --  Free resources allocated for this. Make sure to call this function for
+   --  all mpq_t variables when you are done with them. NOTE: this is ensured
+   --  by the use of a controlled type.
+
+   function mpq_set_str
+     (this : access mpq_t;
+      str  : chars_ptr;
+      base : Int) return Int
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_str";
+   --  See Rational.Set
+
+   --  Conversion
+
+   function mpq_get_str
+     (str  : System.Address;
+      base : Int;
+      op   : access constant mpq_t) return chars_ptr
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_get_str";
+   --  Convert op to a string of digits in base base. The base argument may
+   --  vary from 2 to 62 or from -2 to -36. The string will be of the form
+   --  "num/den", or if the denominator is 1 then just "num".
+   --
+   --  For base in the range 2..36, digits and lower-case letters are used; for
+   --  -2..-36, digits and upper-case letters are used; for 37..62, digits,
+   --  upper-case letters, and lower-case letters (in that significance order)
+   --  are used.
+   --
+   --  str should point to a block of storage large enough for the result, that
+   --  being
+   --
+   --  mpz_num_sizeinbase (op, base)
+   --  + mpz_den_sizeinbase (op, base) + 3
+   --
+   --  The three extra bytes are for a possible minus sign, possible slash, and
+   --  the null-terminator.
+   --
+   --  A pointer to the result string is returned, being either the allocated
+   --  block, or the given str.
+
+   --  Integer Functions
+
+   procedure mpq_get_num
+     (num : access mpz_t;
+      op  : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_get_num";
+   --  Get the numerator of a rational
+
+   procedure mpq_get_den
+     (den : access mpz_t;
+      op  : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_get_den";
+   --  Get the denumerator of a rational
+
 private
 
    type mpz_t is record
@@ -336,5 +433,10 @@ private
       mp_lc   : System.Address;
    end record;
    pragma Convention (C, gmp_randstate_t);
+
+   type mpq_t is record
+      num : mpz_t;
+      den : mpz_t;
+   end record with Convention => C;
 
 end GNATCOLL.GMP.Lib;

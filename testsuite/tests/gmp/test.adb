@@ -22,7 +22,7 @@
 ------------------------------------------------------------------------------
 
 with Test_Image, Test_Div, Test_Eq, Test_Pow, Test_Mod, Test_Rem, Test_Swap,
-     Test_Roots, Test_GCD, Test_Operators;
+     Test_Roots, Test_GCD, Test_Operators, Test_Rationals;
 with Test_Assert;
 
 function Test return Integer is
@@ -37,6 +37,7 @@ begin
    Test_Mod;
    Test_GCD;
    Test_Operators;
+   Test_Rationals;
 
    return Test_Assert.Report;
 end Test;

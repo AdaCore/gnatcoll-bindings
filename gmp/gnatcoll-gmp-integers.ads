@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2009-2017, AdaCore                     --
+--                     Copyright (C) 2009-2022, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -93,6 +93,11 @@ package GNATCOLL.GMP.Integers is
    --  Set the value of This from To.
 
    procedure Set_UL (This : out Big_Integer;  To : Unsigned_Long);
+   --  Set the value of This from To.
+
+   procedure Set
+     (This : out Big_Integer;
+      To   : access constant GNATCOLL.GMP.Lib.mpz_t);
    --  Set the value of This from To.
 
    pragma Inline (Set);
