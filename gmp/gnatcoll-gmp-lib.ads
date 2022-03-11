@@ -357,6 +357,34 @@ package GNATCOLL.GMP.Lib is
    --  all mpq_t variables when you are done with them. NOTE: this is ensured
    --  by the use of a controlled type.
 
+   procedure mpq_set (this : access mpq_t; op : access constant mpq_t) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set";
+   --  Assign this from op
+
+   procedure mpq_set_z (this : access mpq_t; op : access constant mpz_t) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_z";
+   --  Assign this from op
+
+   procedure mpq_set_ui (this : access mpq_t; op1, op2 : Unsigned_Long) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_ui";
+   --  Set the value of this to op1/op2
+
+   procedure mpq_set_si
+     (this : access mpq_t;
+      op1  : Long;
+      op2  : Unsigned_Long)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_si";
+   --  Set the value of this to op1/op2
+
    function mpq_set_str
      (this : access mpq_t;
       str  : chars_ptr;
@@ -366,6 +394,12 @@ package GNATCOLL.GMP.Lib is
      Convention    => C,
      External_Name => "__gmpq_set_str";
    --  See Rational.Set
+
+   procedure mpq_swap (rop1, rop2 : access mpq_t) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_swap";
+   --  Swap the values rop1 and rop2 efficiently
 
    --  Conversion
 

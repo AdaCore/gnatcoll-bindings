@@ -51,12 +51,31 @@ package GNATCOLL.GMP.Rational_Numbers is
    --  denominator and the numerator have no common factors, and that the
    --  denominator is positive. Zero has the unique representation 0/1.
    --
-   --  The Set procedure canonicalizes the assigned variable by default so you
-   --  don't have to worry about it. If you do not need explicitly to handle
-   --  non-canonical values, you don't have to use this procedure, every
-   --  rational number is automatically canonicalized.
+   --  Set procedures canonicalize the assigned variable by default (see Set
+   --  methods below) so you don't have to worry about it. If you do not need
+   --  explicitly to handle non-canonical values, you don't have to use this
+   --  procedure, every rational number is automatically canonicalized.
+
+   function Is_Canonical (This : Rational) return Boolean;
+   --  Return whether This is in canonical form
 
    --  Assignment
+
+   procedure Set
+     (This         : out Rational;
+      To           : Rational;
+      Canonicalize : Boolean := True);
+   --  Copy the To rational number to This
+
+   procedure Set (This : out Rational; To : Big_Integer);
+   --  Set This rational to a Big_Integer
+
+   procedure Set
+     (This         : out Rational;
+      Num          : Long;
+      Den          : Unsigned_Long := 1;
+      Canonicalize : Boolean       := True);
+   --  Set This rational to "Num/Den" integers
 
    procedure Set
      (This         : out Rational;
@@ -79,6 +98,9 @@ package GNATCOLL.GMP.Rational_Numbers is
    --
    --  Raise a Failure exception if the string is not valid or if the
    --  denominator is 0.
+
+   procedure Swap (R1, R2 : in out Rational);
+   --  Swap two Rational numbers
 
    --  Output
 

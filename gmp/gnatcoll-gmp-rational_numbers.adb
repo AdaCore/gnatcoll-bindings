@@ -39,9 +39,59 @@ package body GNATCOLL.GMP.Rational_Numbers is
       end if;
    end Canonicalize;
 
+   ------------------
+   -- Is_Canonical --
+   ------------------
+   function Is_Canonical (This : Rational) return Boolean is
+   begin
+      return This.Canonicalized;
+   end Is_Canonical;
+
    ---------
    -- Set --
    ---------
+
+   procedure Set
+     (This         : out Rational;
+      To           : Rational;
+      Canonicalize : Boolean := True) is
+   begin
+      This.Canonicalized := To.Canonicalized;
+      mpq_set (This.Value'Access, To.Value'Access);
+
+      if Canonicalize then
+         This.Canonicalize;
+      end if;
+   end Set;
+
+   procedure Set (This : out Rational; To : Big_Integer) is
+   begin
+      --  This is canonical for sure as the denominator is set to 1 by
+      --  construction.
+
+      This.Canonicalized := True;
+
+      mpq_set_z (This.Value'Access, As_mpz_t (To));
+   end Set;
+
+   procedure Set
+     (This         : out Rational;
+      Num          : Long;
+      Den          : Unsigned_Long := 1;
+      Canonicalize : Boolean       := True) is
+   begin
+      if Den = 0 then
+         raise Failure with "cannot set number with 0 as denominator";
+      end if;
+
+      This.Canonicalized := False;
+
+      mpq_set_si (This.Value'Access, Num, Den);
+
+      if Canonicalize then
+         This.Canonicalize;
+      end if;
+   end Set;
 
    procedure Set
      (This         : out Rational;
@@ -71,6 +121,19 @@ package body GNATCOLL.GMP.Rational_Numbers is
          This.Canonicalize;
       end if;
    end Set;
+
+   ----------
+   -- Swap --
+   ----------
+
+   procedure Swap (R1, R2 : in out Rational) is
+      Canonicalized : constant Boolean := R1.Canonicalized;
+   begin
+      mpq_swap (R1.Value'Access, R2.Value'Access);
+
+      R1.Canonicalized := R2.Canonicalized;
+      R2.Canonicalized := Canonicalized;
+   end Swap;
 
    -----------
    -- Image --
