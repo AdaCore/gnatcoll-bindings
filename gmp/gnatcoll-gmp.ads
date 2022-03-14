@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2009-2017, AdaCore                     --
+--                     Copyright (C) 2009-2022, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -40,5 +40,7 @@ package GNATCOLL.GMP is
    type Long is new Interfaces.C.long;
 
    type Unsigned_Long is new Interfaces.C.unsigned_long;
+
+   type Double is new Interfaces.C.double;
 
 end GNATCOLL.GMP;

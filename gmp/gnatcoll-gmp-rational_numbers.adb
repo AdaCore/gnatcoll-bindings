@@ -122,6 +122,21 @@ package body GNATCOLL.GMP.Rational_Numbers is
       end if;
    end Set;
 
+   procedure Set (This : out Rational; To : Double) is
+   begin
+      if To /= To then
+         raise Failure with "cannot set number from a NaN";
+      elsif To > Double'Last or else To < Double'First then
+         raise Failure with "cannot set number from infinity";
+      end if;
+
+      --  Set from Double is canonical by construction
+
+      This.Canonicalized := True;
+
+      mpq_set_d (This.Value'Access, To);
+   end Set;
+
    ----------
    -- Swap --
    ----------
@@ -158,6 +173,15 @@ package body GNATCOLL.GMP.Rational_Numbers is
       Result := mpq_get_str (Buffer'Address, Int (Base), This.Value'Access);
       return Value (Result);
    end Image;
+
+   ---------------
+   -- To_Double --
+   ---------------
+
+   function To_Double (This : Rational) return Double is
+   begin
+      return mpq_get_d (This.Value'Access);
+   end To_Double;
 
    ---------------
    -- Numerator --

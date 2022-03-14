@@ -403,6 +403,22 @@ package GNATCOLL.GMP.Lib is
 
    --  Conversion
 
+   function mpq_get_d (op : access constant mpq_t) return Double with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_get_d";
+   --  Convert op to a double, truncating if necessary (i.e. rounding towards
+   --  zero).
+   --
+   --  See Rational_Numbers.To_Double for more details.
+
+   procedure mpq_set_d (this : access mpq_t; op : Double) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_d";
+   --  Set this to the value of op. There is no rounding, this conversion
+   --  is exact.
+
    function mpq_get_str
      (str  : System.Address;
       base : Int;

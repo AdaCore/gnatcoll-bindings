@@ -35,6 +35,9 @@ procedure Test_Rationals is
    procedure Test_Assignments;
    --  Test Set for all supported argument types
 
+   procedure Test_Conversions;
+   --  Test conversions from/to floating-point values
+
    ----------------------
    -- Test_Assignments --
    ----------------------
@@ -178,6 +181,103 @@ procedure Test_Rationals is
       Assert (S.Image, "1/2");
    end Test_Assignments;
 
+   ----------------------
+   -- Test_Conversions --
+   ----------------------
+
+   procedure Test_Conversions is
+      R          : Rational;
+      Result     : Double;
+      Zero_Image : String := " 0.00000000000000E+00";
+   begin
+      --  Check conversions from/to Double
+
+      declare
+         D : constant Double := Double'Last;
+      begin
+         R.Set (D);
+         Result := R.To_Double;
+         Assert (Result = D);
+      end;
+
+      --  Same tests but from an Ada floating-point type
+
+      declare
+         E : constant Long_Float := Long_Float'Model_Small;
+      begin
+         R.Set (Double (E));
+         Result := R.To_Double;
+         Assert (Long_Float (Result) = E);
+      end;
+
+      -- Ensure that NaN, +Inf, -Inf are invalid inputs for Double conversion
+
+      declare
+         function Minus (A, B : Double) return Double is (A - B);
+
+         Zero : constant Double := Minus (1.0, 1.0);
+         NaN  : constant Double := Zero / Zero;
+         Inf  : Double          := 1.0 / Zero;
+      begin
+         --  NaN
+
+         begin
+            Assert (NaN'Image, "NaN*****************");
+            R.Set (NaN);
+            Assert (False, "Should complain about NaN");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E),
+                       "cannot set number from a NaN");
+         end;
+
+         -- +Inf
+
+         begin
+            Assert (Inf'Image, "+Inf****************");
+            R.Set (Inf);
+            Assert (False, "Should complain about infinity");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E),
+                       "cannot set number from infinity");
+         end;
+
+         -- -Inf
+
+         begin
+            Inf := -Inf;
+            Assert (Inf'Image, "-Inf****************");
+            R.Set (Inf);
+            Assert (False, "Should complain about infinity");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E),
+                       "cannot set number from infinity");
+         end;
+      end;
+
+      --  0/1 is converted to 0.0 in the floating-point set
+
+      R.Set ("0/1");
+      Result := R.To_Double;
+      Assert (Result'Image, Zero_Image);
+
+      --  Underflow
+
+      R.Set ("1/1" & (1 .. 350 => '0'));
+      Result := R.To_Double;
+      Assert (Result'Image, Zero_Image);
+
+      --  Overflow
+
+      R.Set ("1" & (1 .. 350 => '0'));
+      Result := R.To_Double;
+      Assert (Result'Image, "+Inf****************");
+
+   end Test_Conversions;
+
 begin
    Test_Assignments;
+   Test_Conversions;
 end Test_Rationals;

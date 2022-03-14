@@ -99,6 +99,9 @@ package GNATCOLL.GMP.Rational_Numbers is
    --  Raise a Failure exception if the string is not valid or if the
    --  denominator is 0.
 
+   procedure Set (This : out Rational; To : Double);
+   --  Set This to a Double
+
    procedure Swap (R1, R2 : in out Rational);
    --  Swap two Rational numbers
 
@@ -106,6 +109,18 @@ package GNATCOLL.GMP.Rational_Numbers is
 
    function Image (This : Rational; Base : Integer := 10) return String;
    --  See GMP.Lib.mpq_get_str for more documentation about Base
+
+   --  Conversion
+
+   function To_Double (This : Rational) return Double;
+   --  Convert This to a double, truncating if necessary (i.e. rounding towards
+   --  zero).
+   --
+   --  If the exponent from the conversion is too big or too small to fit a
+   --  double then the result is system dependent. For too big numbers an
+   --  infinity is returned when available. For too small numbers, 0.0 is
+   --  normally returned. Hardware overflow, underflow and denorm traps may or
+   --  may not occur.
 
    --  Integer functions
 
