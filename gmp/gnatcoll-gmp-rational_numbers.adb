@@ -183,6 +183,105 @@ package body GNATCOLL.GMP.Rational_Numbers is
       return mpq_get_d (This.Value'Access);
    end To_Double;
 
+   --------------------------
+   -- Operand_Precondition --
+   --------------------------
+
+   procedure Operand_Precondition (This : Rational; Name : String := "") is
+   begin
+      if not This.Canonicalized then
+         raise Failure
+           with (if Name /= "" then Name & " " else Name)
+             & "operand must be canonicalized";
+      end if;
+   end Operand_Precondition;
+
+   ---------
+   -- "+" --
+   ---------
+
+   function "+" (Left, Right : Rational) return Rational is
+   begin
+      return Result : Rational do
+         Operand_Precondition (Left, "Left");
+         Operand_Precondition (Right, "Right");
+         mpq_add (Result.Value'Access, Left.Value'Access, Right.Value'Access);
+      end return;
+   end "+";
+
+   ---------
+   -- "-" --
+   ---------
+
+   function "-" (Left, Right : Rational) return Rational is
+   begin
+      return Result : Rational do
+         Operand_Precondition (Left, "Left");
+         Operand_Precondition (Right, "Right");
+         mpq_sub (Result.Value'Access, Left.Value'Access, Right.Value'Access);
+      end return;
+   end "-";
+
+   function "-" (Left : Rational) return Rational is
+   begin
+      return Result : Rational do
+         Operand_Precondition (Left);
+         mpq_neg (Result.Value'Access, Left.Value'Access);
+      end return;
+   end "-";
+
+   ---------
+   -- "*" --
+   ---------
+
+   function "*" (Left, Right : Rational) return Rational is
+   begin
+      return Result : Rational do
+         Operand_Precondition (Left, "Left");
+         Operand_Precondition (Right, "Right");
+         mpq_mul (Result.Value'Access, Left.Value'Access, Right.Value'Access);
+      end return;
+   end "*";
+
+   ---------
+   -- "/" --
+   ---------
+
+   function "/" (Left, Right : Rational) return Rational is
+   begin
+      return Result : Rational do
+         Operand_Precondition (Left, "Left");
+         Operand_Precondition (Right, "Right");
+
+         --  Since GNAT signal handlers can be disabled, do not rely on the
+         --  runtime to raise a Contraint_Error (SIGFPE), but raise an explicit
+         --  Failure exception on division by zero.
+
+         --  Use Result as a temporary to compare Right to 0 since Rational
+         --  numbers are set to 0/1 by default.
+
+         if mpq_equal (Right.Value'Access, Result.Value'Access) = 0 then
+            mpq_div (Result.Value'Access,
+                     Left.Value'Access,
+                     Right.Value'Access);
+         else
+            raise Failure with "Division by zero";
+         end if;
+      end return;
+   end "/";
+
+   -----------
+   -- "abs" --
+   -----------
+
+   function "abs" (Left : Rational) return Rational is
+   begin
+      return Result : Rational do
+         Operand_Precondition (Left);
+         mpq_abs (Result.Value'Access, Left.Value'Access);
+      end return;
+   end "abs";
+
    ---------------
    -- Numerator --
    ---------------

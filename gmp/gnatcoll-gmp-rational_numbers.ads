@@ -122,6 +122,15 @@ package GNATCOLL.GMP.Rational_Numbers is
    --  normally returned. Hardware overflow, underflow and denorm traps may or
    --  may not occur.
 
+   --  Arithmetic
+
+   function "+" (Left, Right : Rational) return Rational;
+   function "-" (Left, Right : Rational) return Rational;
+   function "*" (Left, Right : Rational) return Rational;
+   function "/" (Left, Right : Rational) return Rational;
+   function "-" (Left : Rational) return Rational;
+   function "abs" (Left : Rational) return Rational;
+
    --  Integer functions
 
    function Numerator (This : Rational) return Big_Integer;
@@ -147,5 +156,9 @@ private
 
    overriding procedure Initialize (This : in out Rational);
    overriding procedure Finalize   (This : in out Rational);
+
+   procedure Operand_Precondition (This : Rational; Name : String := "");
+   --  Check that This is in canonical form, if not, raise an exception saying
+   --  that Name is not canonicalized.
 
 end GNATCOLL.GMP.Rational_Numbers;

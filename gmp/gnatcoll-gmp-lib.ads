@@ -448,6 +448,63 @@ package GNATCOLL.GMP.Lib is
    --  A pointer to the result string is returned, being either the allocated
    --  block, or the given str.
 
+   --  Arithmetic
+
+   procedure mpq_add
+     (this     : access mpq_t;
+      op1, op2 : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_add";
+
+   procedure mpq_sub
+     (this     : access mpq_t;
+      op1, op2 : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_sub";
+
+   procedure mpq_mul
+     (this     : access mpq_t;
+      op1, op2 : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_mul";
+
+   procedure mpq_div
+     (this     : access mpq_t;
+      op1, op2 : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_div";
+
+   procedure mpq_neg
+     (this : access mpq_t;
+      op   : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_neg";
+
+   procedure mpq_abs
+     (this : access mpq_t;
+      op   : access constant mpq_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_abs";
+
+   --  Comparisons
+
+   function mpq_equal (op1, op2 : access constant mpq_t) return Int with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_equal";
+
    --  Integer Functions
 
    procedure mpq_get_num

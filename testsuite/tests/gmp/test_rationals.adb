@@ -38,6 +38,9 @@ procedure Test_Rationals is
    procedure Test_Conversions;
    --  Test conversions from/to floating-point values
 
+   procedure Test_Arithmetics;
+   --  Test rational number arithmetic
+
    ----------------------
    -- Test_Assignments --
    ----------------------
@@ -186,9 +189,11 @@ procedure Test_Rationals is
    ----------------------
 
    procedure Test_Conversions is
-      R          : Rational;
-      Result     : Double;
-      Zero_Image : String := " 0.00000000000000E+00";
+      R              : Rational;
+      Result         : Double;
+      Pos_Zero_Image : constant String := " 0.00000000000000E+00";
+      Pos_Inf_Image  : constant String := "+Inf****************";
+      Neg_Inf_Image  : constant String := "-Inf****************";
    begin
       --  Check conversions from/to Double
 
@@ -261,23 +266,168 @@ procedure Test_Rationals is
 
       R.Set ("0/1");
       Result := R.To_Double;
-      Assert (Result'Image, Zero_Image);
+      Assert (Result'Image, Pos_Zero_Image);
 
       --  Underflow
 
       R.Set ("1/1" & (1 .. 350 => '0'));
       Result := R.To_Double;
-      Assert (Result'Image, Zero_Image);
+      Assert (Result'Image, Pos_Zero_Image);
 
       --  Overflow
 
       R.Set ("1" & (1 .. 350 => '0'));
       Result := R.To_Double;
-      Assert (Result'Image, "+Inf****************");
+      Assert (Result'Image, Pos_Inf_Image);
 
    end Test_Conversions;
+
+   ----------------------
+   -- Test_Arithmetics --
+   ----------------------
+
+   procedure Test_Arithmetics is
+      R, A, B, C : Rational;
+   begin
+      A.Set ("1/10");
+
+      --  Init a rational number without explicit canonicalization
+
+      B.Set ("150/15", Canonicalize => False);
+      Assert (B.Image, "150/15");
+
+      --  Canonicalize B and check that the copy C is still non-canonicalized
+
+      C.Set (B, Canonicalize => B.Is_Canonical);
+      B.Canonicalize;
+      Assert (B.Image, "10");
+      Assert (C.Image, "150/15");
+      Assert (B.Is_Canonical);
+      Assert (not C.Is_Canonical);
+
+      --  Check some basic arithemtic
+
+      R.Set (A + B);
+      Assert (R.Image, "101/10");
+
+      R.Set (A - B);
+      Assert (R.Image, "-99/10");
+
+      R.Set (A * B);
+      Assert (R.Image, "1");
+
+      R.Set (A / B);
+      Assert (R.Image, "1/100");
+
+      R.Set (-A);
+      Assert (R.Image, "-1/10");
+
+      R.Set (abs R);
+      Assert (R.Image, "1/10");
+
+      R.Set (A + B - A * B / (-A));
+      Assert (R.Image, "201/10");
+
+      --  Division by zero raises a Failure exception
+
+      declare
+         A, B : Rational;
+      begin
+         A.Set ("1/1");
+         B.Set ("0/1");
+         begin
+            R.Set (A / B);
+            Assert (False, "division by 0");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E), "Division by zero");
+         end;
+      end;
+
+      --  Operations raise an exception when operands are not in a canonical
+      --  form.
+
+      declare
+         type Binary_Operator is access
+           function (Left, Right : Rational) return Rational;
+         type Unary_Operator is access
+           function (Operand : Rational) return Rational;
+
+         procedure Test_Binary
+           (Op               : Binary_Operator;
+            Left, Right      : Rational;
+            Expected_Message : String);
+         --  Test an expected failure of a binary operation
+
+         procedure Test_Unary
+           (Op               : Unary_Operator;
+            Operand          : Rational;
+            Expected_Message : String);
+         --  Test an expected failure of an unary operation
+
+         -----------------
+         -- Test_Binary --
+         -----------------
+
+         procedure Test_Binary
+           (Op               : Binary_Operator;
+            Left, Right      : Rational;
+            Expected_Message : String)
+         is
+            Result : Rational;
+         begin
+            begin
+               Result.Set (Op (Left, Right));
+               Assert (False, "Should raise a Failure exception");
+            exception
+               when E : Rational_Numbers.Failure =>
+                  Assert (Exception_Message (E), Expected_Message);
+            end;
+         end Test_Binary;
+
+         ----------------
+         -- Test_Unary --
+         ----------------
+
+         procedure Test_Unary
+           (Op               : Unary_Operator;
+            Operand          : Rational;
+            Expected_Message : String)
+         is
+            Result : Rational;
+         begin
+            begin
+               Result.Set (Op (Operand));
+               Assert (False, "Should raise a Failure exception");
+            exception
+               when E : Rational_Numbers.Failure =>
+                  Assert (Exception_Message (E), Expected_Message);
+            end;
+         end Test_Unary;
+
+         A, B : Rational;
+      begin
+         A.Set ("2/2", Canonicalize => False);
+         B.Set ("1/2");
+
+         Test_Binary ("+"'Access, A, B, "Left operand must be canonicalized");
+         Test_Binary ("-"'Access, A, B, "Left operand must be canonicalized");
+         Test_Binary ("*"'Access, A, B, "Left operand must be canonicalized");
+         Test_Binary ("/"'Access, A, B, "Left operand must be canonicalized");
+
+         Test_Binary ("+"'Access, B, A, "Right operand must be canonicalized");
+         Test_Binary ("-"'Access, B, A, "Right operand must be canonicalized");
+         Test_Binary ("*"'Access, B, A, "Right operand must be canonicalized");
+         Test_Binary ("/"'Access, B, A, "Right operand must be canonicalized");
+
+         Test_Unary ("-"'Access, A, "operand must be canonicalized");
+         Test_Unary ("abs"'Access, A, "operand must be canonicalized");
+      end;
+
+end Test_Arithmetics;
 
 begin
    Test_Assignments;
    Test_Conversions;
+   Test_Arithmetics;
 end Test_Rationals;
