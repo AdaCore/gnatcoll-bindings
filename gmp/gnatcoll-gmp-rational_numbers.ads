@@ -131,6 +131,28 @@ package GNATCOLL.GMP.Rational_Numbers is
    function "-" (Left : Rational) return Rational;
    function "abs" (Left : Rational) return Rational;
 
+   --  Comparisons
+
+   function "=" (Left : Rational;    Right : Rational)    return Boolean;
+   function "=" (Left : Rational;    Right : Big_Integer) return Boolean;
+   function "=" (Left : Big_Integer; Right : Rational)    return Boolean;
+
+   function ">" (Left : Rational;    Right : Rational)    return Boolean;
+   function ">" (Left : Rational;    Right : Big_Integer) return Boolean;
+   function ">" (Left : Big_Integer; Right : Rational)    return Boolean;
+
+   function "<" (Left : Rational;    Right : Rational)    return Boolean;
+   function "<" (Left : Rational;    Right : Big_Integer) return Boolean;
+   function "<" (Left : Big_Integer; Right : Rational)    return Boolean;
+
+   function ">=" (Left : Rational;    Right : Rational)    return Boolean;
+   function ">=" (Left : Rational;    Right : Big_Integer) return Boolean;
+   function ">=" (Left : Big_Integer; Right : Rational)    return Boolean;
+
+   function "<=" (Left : Rational;    Right : Rational)    return Boolean;
+   function "<=" (Left : Rational;    Right : Big_Integer) return Boolean;
+   function "<=" (Left : Big_Integer; Right : Rational)    return Boolean;
+
    --  Integer functions
 
    function Numerator (This : Rational) return Big_Integer;

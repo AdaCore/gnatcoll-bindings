@@ -282,6 +282,121 @@ package body GNATCOLL.GMP.Rational_Numbers is
       end return;
    end "abs";
 
+   -------
+   -- = --
+   -------
+
+   function "=" (Left, Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      Operand_Precondition (Right, "Right");
+      return mpq_equal (Left.Value'Access, Right.Value'Access) /= 0;
+   end "=";
+
+   function "=" (Left : Rational; Right : Big_Integer) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      return mpq_cmp_z (Left.Value'Access, As_mpz_t (Right)) = 0;
+   end "=";
+
+   function "=" (Left : Big_Integer; Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp_z (Right.Value'Access, As_mpz_t (Left)) = 0;
+   end "=";
+
+   -------
+   -- > --
+   -------
+
+   function ">" (Left, Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp (Left.Value'Access, Right.Value'Access) > 0;
+   end ">";
+
+   function ">" (Left : Rational; Right : Big_Integer) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      return mpq_cmp_z (Left.Value'Access, As_mpz_t (Right)) > 0;
+   end ">";
+
+   function ">" (Left : Big_Integer; Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp_z (Right.Value'Access, As_mpz_t (Left)) < 0;
+   end ">";
+
+   -------
+   -- < --
+   -------
+
+   function "<" (Left, Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp (Left.Value'Access, Right.Value'Access) < 0;
+   end "<";
+
+   function "<" (Left : Rational; Right : Big_Integer) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      return mpq_cmp_z (Left.Value'Access, As_mpz_t (Right)) < 0;
+   end "<";
+
+   function "<" (Left : Big_Integer; Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp_z (Right.Value'Access, As_mpz_t (Left)) > 0;
+   end "<";
+
+   --------
+   -- >= --
+   --------
+
+   function ">=" (Left, Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp (Left.Value'Access, Right.Value'Access) >= 0;
+   end ">=";
+
+   function ">=" (Left : Rational; Right : Big_Integer) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      return mpq_cmp_z (Left.Value'Access, As_mpz_t (Right)) >= 0;
+   end ">=";
+
+   function ">=" (Left : Big_Integer; Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp_z (Right.Value'Access, As_mpz_t (Left)) <= 0;
+   end ">=";
+
+   --------
+   -- <= --
+   --------
+
+   function "<=" (Left, Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp (Left.Value'Access, Right.Value'Access) <= 0;
+   end "<=";
+
+   function "<=" (Left : Rational; Right : Big_Integer) return Boolean is
+   begin
+      Operand_Precondition (Left, "Left");
+      return mpq_cmp_z (Left.Value'Access, As_mpz_t (Right)) <= 0;
+   end "<=";
+
+   function "<=" (Left : Big_Integer; Right : Rational) return Boolean is
+   begin
+      Operand_Precondition (Right, "Right");
+      return mpq_cmp_z (Right.Value'Access, As_mpz_t (Left)) >= 0;
+   end "<=";
+
    ---------------
    -- Numerator --
    ---------------

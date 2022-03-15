@@ -500,6 +500,19 @@ package GNATCOLL.GMP.Lib is
 
    --  Comparisons
 
+   function mpq_cmp (op1, op2 : access constant mpq_t) return Int with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_cmp";
+
+   function mpq_cmp_z
+     (op1 : access constant mpq_t;
+      op2 : access constant mpz_t) return Int
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_cmp_z";
+
    function mpq_equal (op1, op2 : access constant mpq_t) return Int with
      Import        => True,
      Convention    => C,

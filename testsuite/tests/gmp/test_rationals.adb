@@ -41,6 +41,9 @@ procedure Test_Rationals is
    procedure Test_Arithmetics;
    --  Test rational number arithmetic
 
+   procedure Test_Comparisons;
+   --  Test rational number comparisons
+
    ----------------------
    -- Test_Assignments --
    ----------------------
@@ -426,8 +429,214 @@ procedure Test_Rationals is
 
 end Test_Arithmetics;
 
+   ----------------------
+   -- Test_Comparisons --
+   ----------------------
+
+   procedure Test_Comparisons is
+      R, Equal_To_R, Greater_Than_R, Equal_To_B : Rational;
+      B, Less_Than_B, Greater_Than_B            : Big_Integer;
+   begin
+      Set (R, "1/2");
+      Set (Equal_To_R, "1/2");
+      Set (Greater_Than_R, "355/113");
+      Set (Less_Than_B, 1);
+      Set (B, 3);
+      Set (Greater_Than_B, 6);
+      Set (Equal_To_B, B);
+
+      --  Rational/Rational comparisons
+
+      Assert (R = Equal_To_R);
+      Assert (not (R = Greater_Than_R));
+
+      Assert (R /= Greater_Than_R);
+      Assert (not (R /= Equal_To_R));
+
+      Assert (R < Greater_Than_R);
+      Assert (not (Greater_Than_R < R));
+
+      Assert (Greater_Than_R > R);
+      Assert (not (R > Greater_Than_R));
+
+      Assert (R >= Equal_To_R);
+      Assert (Equal_To_R >= R);
+      Assert (Greater_Than_R >= R);
+      Assert (not (R >= Greater_Than_R));
+
+      Assert (R <= Equal_To_R);
+      Assert (Equal_To_R <= R);
+      Assert (R <= Greater_Than_R);
+      Assert (not (Greater_Than_R <= R));
+
+      --  Rational/Big_Integer comparisons
+
+      Assert (B = Equal_To_B);
+      Assert (Equal_To_B = B);
+      Assert (not (Less_Than_B = Equal_To_B));
+      Assert (not (Equal_To_B = Less_Than_B));
+
+      Assert (Less_Than_B /= Equal_To_B);
+      Assert (Equal_To_B /= Less_Than_B);
+      Assert (not (B /= Equal_To_B));
+      Assert (not (Equal_To_B /= B));
+
+      Assert (Greater_Than_B > Equal_To_B);
+      Assert (Equal_To_B > Less_Than_B);
+      Assert (not (Equal_To_B > Greater_Than_B));
+      Assert (not (Less_Than_B > Equal_To_B));
+
+      Assert (Less_Than_B < Equal_To_B);
+      Assert (Equal_To_B < Greater_Than_B);
+      Assert (not (Equal_To_B < Less_Than_B));
+      Assert (not (Greater_Than_B < Equal_To_B));
+
+      Assert (B >= Equal_To_B);
+      Assert (Equal_To_B >= B);
+      Assert (Greater_Than_B >= Equal_To_B);
+      Assert (Equal_To_B >= Less_Than_B);
+      Assert (not (Equal_To_B >= Greater_Than_B));
+      Assert (not (Less_Than_B >= Equal_To_B));
+
+      Assert (B <= Equal_To_B);
+      Assert (Equal_To_B <= B);
+      Assert (Less_Than_B <= Equal_To_B);
+      Assert (Equal_To_B <= Greater_Than_B);
+      Assert (not (Equal_To_B <= Less_Than_B));
+      Assert (not (Greater_Than_B <= Equal_To_B));
+
+      --  Comparisons raise an exception when operands are not in a canonical
+      --  form.
+
+      declare
+         type RR_Operator is access
+           function (Left, Right : Rational) return Boolean;
+
+         type RI_Operator is access
+           function (Left : Rational; Right : Big_Integer) return Boolean;
+
+         type IR_Operator is access
+           function (Left : Big_Integer; Right : Rational) return Boolean;
+
+         procedure Test_RR_Operator
+           (Op               : RR_Operator;
+            Left, Right      : Rational;
+            Expected_Message : String);
+         --  Test an expected failure of a Rational/Rational comparison
+
+         procedure Test_RI_Operator
+           (Op               : RI_Operator;
+            Left             : Rational;
+            Right            : Big_Integer);
+         --  Test an expected failure of a Rational/Big_Integer comparison
+
+         procedure Test_IR_Operator
+           (Op               : IR_Operator;
+            Left             : Big_Integer;
+            Right            : Rational);
+         --  Test an expected failure of a Big_Integer/Rational comparison
+
+         ----------------------
+         -- Test_RR_Operator --
+         ----------------------
+
+         procedure Test_RR_Operator
+           (Op               : RR_Operator;
+            Left, Right      : Rational;
+            Expected_Message : String)
+         is
+            Result : Boolean;
+         begin
+            Result := Op (Left, Right);
+            Assert (False, "Should raise a Failure exception");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E), Expected_Message);
+         end Test_RR_Operator;
+
+         ----------------------
+         -- Test_RI_Operator --
+         ----------------------
+
+         procedure Test_RI_Operator
+           (Op               : RI_Operator;
+            Left             : Rational;
+            Right            : Big_Integer)
+         is
+            Result : Boolean;
+         begin
+            Result := Op (Left, Right);
+            Assert (False, "Should raise a Failure exception");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E),
+                       "Left operand must be canonicalized");
+         end Test_RI_Operator;
+
+         ----------------------
+         -- Test_IR_Operator --
+         ----------------------
+
+         procedure Test_IR_Operator
+           (Op               : IR_Operator;
+            Left             : Big_Integer;
+            Right            : Rational)
+         is
+            Result : Boolean;
+         begin
+            Result := Op (Left, Right);
+            Assert (False, "Should raise a Failure exception");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E),
+                       "Right operand must be canonicalized");
+         end Test_IR_Operator;
+
+         A, B : Rational;
+         C    : Big_Integer := Make ("1");
+      begin
+         A.Set ("2/2", Canonicalize => False);
+         B.Set ("1/2");
+
+         Test_RR_Operator ("="'Access, A, B,
+                           "Left operand must be canonicalized");
+         Test_RR_Operator (">"'Access, A, B,
+                           "Left operand must be canonicalized");
+         Test_RR_Operator ("<"'Access, A, B,
+                           "Left operand must be canonicalized");
+         Test_RR_Operator (">="'Access, A, B,
+                           "Left operand must be canonicalized");
+         Test_RR_Operator ("<="'Access, A, B,
+                           "Left operand must be canonicalized");
+
+         Test_RR_Operator ("="'Access, B, A,
+                           "Right operand must be canonicalized");
+         Test_RR_Operator (">"'Access, B, A,
+                           "Right operand must be canonicalized");
+         Test_RR_Operator ("<"'Access, B, A,
+                           "Right operand must be canonicalized");
+         Test_RR_Operator (">="'Access, B, A,
+                           "Right operand must be canonicalized");
+         Test_RR_Operator ("<="'Access, B, A,
+                           "Right operand must be canonicalized");
+
+         Test_RI_Operator ("="'Access, A, C);
+         Test_RI_Operator (">"'Access, A, C);
+         Test_RI_Operator ("<"'Access, A, C);
+         Test_RI_Operator (">="'Access, A, C);
+         Test_RI_Operator ("<="'Access, A, C);
+
+         Test_IR_Operator ("="'Access, C, A);
+         Test_IR_Operator (">"'Access, C, A);
+         Test_IR_Operator ("<"'Access, C, A);
+         Test_IR_Operator (">="'Access, C, A);
+         Test_IR_Operator ("<="'Access, C, A);
+      end;
+   end Test_Comparisons;
+
 begin
    Test_Assignments;
    Test_Conversions;
    Test_Arithmetics;
+   Test_Comparisons;
 end Test_Rationals;
