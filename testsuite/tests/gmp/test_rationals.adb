@@ -44,6 +44,9 @@ procedure Test_Rationals is
    procedure Test_Comparisons;
    --  Test rational number comparisons
 
+   procedure Test_Num_Den;
+   --  Test procedures to set/get numerator/denominator of a rational number
+
    ----------------------
    -- Test_Assignments --
    ----------------------
@@ -634,9 +637,53 @@ end Test_Arithmetics;
       end;
    end Test_Comparisons;
 
+   ------------------
+   -- Test_Num_Den --
+   ------------------
+
+   procedure Test_Num_Den is
+      N, D : Big_Integer;
+      R    : Rational;
+   begin
+      Set (R, "355/113");
+      Assert (Is_Canonical (R));
+
+      N.Set (Numerator (R));
+      D.Set (Denominator (R));
+      Assert (Image (N), "355");
+      Assert (Image (D), "113");
+
+      Set_Num (R, D, Canonicalize => False);
+      Assert (Image (R), "113/113");
+      Assert (not Is_Canonical (R));
+
+      Set_Den (R, N);
+      Assert (Image (R), "113/355");
+      Assert (Is_Canonical (R));
+
+      Set_Num (R, N);
+      Assert (Image (R), "1");
+      Assert (Is_Canonical (R));
+
+      --  Cannot set a denominator to 0
+
+      declare
+         Zero : constant Big_Integer := Make ("0");
+      begin
+         begin
+            Set_Den (R, Zero);
+            Assert (False, "set denominator to 0 is not valid");
+         exception
+            when E : Rational_Numbers.Failure =>
+               Assert (Exception_Message (E), "cannot set denominator to 0");
+         end;
+      end;
+   end Test_Num_Den;
+
 begin
    Test_Assignments;
    Test_Conversions;
    Test_Arithmetics;
    Test_Comparisons;
+   Test_Num_Den;
 end Test_Rationals;

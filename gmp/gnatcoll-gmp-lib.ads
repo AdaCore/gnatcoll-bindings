@@ -538,6 +538,24 @@ package GNATCOLL.GMP.Lib is
      External_Name => "__gmpq_get_den";
    --  Get the denumerator of a rational
 
+   procedure mpq_set_num
+     (op  : access constant mpq_t;
+      num : access constant mpz_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_num";
+   --  Set the numerator of a rational
+
+   procedure mpq_set_den
+     (op  : access constant mpq_t;
+      den : access constant mpz_t)
+   with
+     Import        => True,
+     Convention    => C,
+     External_Name => "__gmpq_set_den";
+   --  Set the denumerator of a rational
+
 private
 
    type mpz_t is record

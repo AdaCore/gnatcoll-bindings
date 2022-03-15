@@ -427,6 +427,44 @@ package body GNATCOLL.GMP.Rational_Numbers is
       end return;
    end Denominator;
 
+   -------------
+   -- Set_Num --
+   -------------
+
+   procedure Set_Num
+     (This         : in out Rational;
+      Num          : Big_Integer;
+      Canonicalize : Boolean := True) is
+   begin
+      mpq_set_num (This.Value'Access, As_mpz_t (Num));
+      This.Canonicalized := False;
+
+      if Canonicalize then
+         This.Canonicalize;
+      end if;
+   end Set_Num;
+
+   -------------
+   -- Set_Den --
+   -------------
+
+   procedure Set_Den
+     (This         : in out Rational;
+      Den          : Big_Integer;
+      Canonicalize : Boolean := True) is
+   begin
+      if Den = 0 then
+         raise Failure with "cannot set denominator to 0";
+      end if;
+
+      mpq_set_den (This.Value'Access, As_mpz_t (Den));
+      This.Canonicalized := False;
+
+      if Canonicalize then
+         This.Canonicalize;
+      end if;
+   end Set_Den;
+
    ----------------
    -- Initialize --
    ----------------

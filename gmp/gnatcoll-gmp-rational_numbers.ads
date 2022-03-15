@@ -161,6 +161,18 @@ package GNATCOLL.GMP.Rational_Numbers is
    function Denominator (This : Rational) return Big_Integer;
    --  Return the denominator of This
 
+   procedure Set_Num
+     (This         : in out Rational;
+      Num          : Big_Integer;
+      Canonicalize : Boolean := True);
+   --  Set the numerator of This
+
+   procedure Set_Den
+     (This         : in out Rational;
+      Den          : Big_Integer;
+      Canonicalize : Boolean := True);
+   --  Set the denominator of This
+
 private
 
    type Rational is new Ada.Finalization.Limited_Controlled with
