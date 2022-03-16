@@ -58,14 +58,15 @@ library project GnatColl_GMP is
       case Build is
          when "DEBUG" =>
             for Switches ("Ada") use
-              ("-g", "-O0", "-gnata", "-gnatVa", "-gnatQ", "-gnaty", "-gnateE",
-               "-gnatwaCJe", "-fstack-check");
-            for Switches ("C") use ("-g", "-Wunreachable-code");
+              ("-g", "-O0", "-gnata", "-gnatVa", "-gnatQ", "-gnatyg", "-gnateE",
+               "-gnatwaCJe", "-fstack-check", "-gnatwae");
+            for Switches ("C") use ("-g", "-Wall" ,"-Werror");
 
          when "PROD" =>
             --  Do not use -gnatwe for production mode
-            for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwaCJ");
-            for Switches ("C") use ("-O2", "-Wunreachable-code");
+            for Switches ("Ada") use
+              ("-O2", "-gnatn", "-gnatwaCJ", "-gnatyg", "-gnatwa");
+            for Switches ("C") use ("-O2", "-Wall");
       end case;
 
       for Switches ("Ada") use Compiler'Switches ("Ada")
