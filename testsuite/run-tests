@@ -36,8 +36,16 @@ class MyTestsuite(Testsuite):
         parser.add_argument(
             "--recompile",
             help="recompile production version of gnatcoll for testing",
-            default=False,
-            action="store_true",
+            default=None,
+            action="store_const",
+            const="PROD",
+        )
+        parser.add_argument(
+            "--debug",
+            help="recompile debug version of gnatcoll for testing",
+            dest="recompile",
+            action="store_const",
+            const="DEBUG",
         )
 
     def set_up(self):
@@ -47,16 +55,19 @@ class MyTestsuite(Testsuite):
         self.env.valgrind = self.main.args.valgrind
         if self.main.args.gcov:
             work_dir = os.path.join(TESTSUITE_ROOT_DIR, "gcov")
-            gpr_dir, src_dir, obj_dir = make_gnatcoll(work_dir, gcov=True)
+            gpr_dir, src_dir, obj_dir = make_gnatcoll(work_dir, "DEBUG", gcov=True)
             self.env.gnatcoll_gpr_dir = gpr_dir
             self.env.gnatcoll_src_dir = src_dir
             self.env.gnatcoll_obj_dir = obj_dir
         else:
             self.env.gnatcoll_gpr_dir = None
 
-        if self.main.args.recompile:
-            work_dir = os.path.join(TESTSUITE_ROOT_DIR, "prod")
-            gpr_dir, _, _ = make_gnatcoll(work_dir, gcov=False)
+        recompile_mode = self.main.args.recompile
+        if recompile_mode:
+            work_dir = os.path.join(TESTSUITE_ROOT_DIR, recompile_mode.lower())
+            gpr_dir, _, _ = make_gnatcoll(
+                work_dir, recompile_mode, gcov=False
+            )
             self.env.gnatcoll_prod_gpr_dir = gpr_dir
             if self.env.gnatcoll_gpr_dir is None:
                 self.env.gnatcoll_gpr_dir = gpr_dir

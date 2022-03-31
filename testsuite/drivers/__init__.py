@@ -27,19 +27,21 @@ PROJECT = {
 }
 
 
-def make_gnatcoll(work_dir, gcov=False):
+def make_gnatcoll(work_dir, build_mode, gcov=False):
     """Build gnatcoll core with or without gcov instrumentation.
 
     :param work_dir: working directory. gnatcoll is built in `build` subdir
         and installed in `install` subdir
     :type work_dir: str
-    :param gcov: if False then build gcov in PROD mode, otherwise
-        build it with gcov instrumentation in DEBUG mode
+    :param build_mode: build mode to use in order to build the gnatcoll
+        project
+    :param gcov: if True, build it with gcov instrumentation
     :type gcov: bool
     :return: a triplet (project path, source path, object path)
     :rtype: (str, str, str)
     :raise AssertError: in case compilation of installation fails
     """
+    params = f"({build_mode}, gcov={gcov})"
 
     # Create build tree structure
     build_dir = os.path.join(work_dir, "build")
@@ -49,7 +51,7 @@ def make_gnatcoll(work_dir, gcov=False):
 
     # Compute make invocation
     for binding in PROJECT.keys():
-        logging.info("Compiling gnatcoll %s (gcov=%s)", binding, gcov)
+        logging.info(f"Compiling gnatcoll {binding} {params}")
         setup = os.path.join(GNATCOLL_ROOT_DIR, binding, "setup.py")
         obj_dir = os.path.join(build_dir, binding)
         mkdir(obj_dir)
@@ -72,10 +74,10 @@ def make_gnatcoll(work_dir, gcov=False):
                 "-largs",
                 "-lgcov",
                 "-gargs",
-                "-XBUILD=DEBUG",
+                f"-XBUILD={build_mode}",
             ]
         else:
-            build_cmd += ["--gpr-opts", "-XBUILD=PROD"]
+            build_cmd += ["--gpr-opts", f"-XBUILD={build_mode}"]
 
         # Build & Install
         p = Run(build_cmd, cwd=obj_dir)
