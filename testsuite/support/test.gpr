@@ -12,4 +12,8 @@ project Test is
    for Main use ("test.adb");
    for Languages use ("Ada", "C");
    for Object_Dir use "obj";
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-g");
+   end Compiler;
 end Test;
