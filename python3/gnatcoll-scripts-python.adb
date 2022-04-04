@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2021, AdaCore                     --
+--                     Copyright (C) 2003-2022, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1308,10 +1308,14 @@ package body GNATCOLL.Scripts.Python is
                end if;
 
                if M /= null then
-                  PyDict_SetItemString
-                    (PyModule_GetDict (Tmp),
-                     "__module__",
-                     PyObject_GetAttrString (M, "__name__"));
+                  declare
+                     Name : constant PyObject :=
+                       PyObject_GetAttrString (M, "__name__");
+                  begin
+                     PyDict_SetItemString
+                       (PyModule_GetDict (Tmp), "__module__", Name);
+                     Py_DECREF (Name);
+                  end;
 
                   Py_INCREF (Tmp);
                   if PyModule_AddObject
@@ -1379,8 +1383,12 @@ package body GNATCOLL.Scripts.Python is
         Lookup_Module (Script, To_String (Module.Name));
 
    begin
-      PyDict_SetItemString
-        (Dict, "__module__", PyObject_GetAttrString (M, "__name__"));
+      declare
+         Name : constant PyObject := PyObject_GetAttrString (M, "__name__");
+      begin
+         PyDict_SetItemString (Dict, "__module__", Name);
+         Py_DECREF (Name);
+      end;
 
       if Base /= No_Class then
          Bases := Create_Tuple
@@ -1399,6 +1407,8 @@ package body GNATCOLL.Scripts.Python is
 
       S := New_String (Name);
       Ignored := PyModule_AddObject (M, S, Class);
+      Py_XDECREF (Bases);
+      Py_XDECREF (Dict);
       Free (S);
    end Register_Class;
 
@@ -3113,6 +3123,7 @@ package body GNATCOLL.Scripts.Python is
       Base     : String) return Boolean
    is
       C, B : PyObject;
+      Res  : Boolean;
    begin
       if Instance.Data = null then
          raise Program_Error;
@@ -3120,7 +3131,9 @@ package body GNATCOLL.Scripts.Python is
 
       C := PyObject_GetAttrString (Instance.Data, "__class__");
       B := Lookup_Object (Python_Scripting (Instance.Script), Base);
-      return Py_IsSubclass (C, Base => B);
+      Res := Py_IsSubclass (C, Base => B);
+      Py_DECREF (C);
+      return Res;
    end Is_Subclass;
 
    ------------------------
@@ -3193,6 +3206,7 @@ package body GNATCOLL.Scripts.Python is
       Tmp := PyDict_SetItem (Data.Return_Dict, Key, List);
 
       if Created_List then
+         Py_XDECREF (Key);
          Py_DECREF (List);
          --  The only reference is now owned by the dictionary
       end if;
@@ -3567,7 +3581,6 @@ package body GNATCOLL.Scripts.Python is
             --  Clear the raised python exception
             PyErr_Clear;
          else
-            Py_INCREF (Subp);
             Res := new Python_Subprogram_Record'
               (Script     => Python_Scripting (Instance.Script),
                Subprogram => Subp);
@@ -3634,6 +3647,7 @@ package body GNATCOLL.Scripts.Python is
       Error      : not null access Boolean) return Class_Instance
    is
       Obj  : PyObject;
+      Inst : Class_Instance;
    begin
       Obj := Execute_Command
         (Script  => Subprogram.Script,
@@ -3643,7 +3657,9 @@ package body GNATCOLL.Scripts.Python is
       if Obj = null then
          return No_Class_Instance;
       else
-         return Get_CI (Subprogram.Script, Obj);
+         Inst := Get_CI (Subprogram.Script, Obj);
+         Py_DECREF (Obj);
+         return Inst;
       end if;
    end Execute;
 
@@ -4037,6 +4053,7 @@ package body GNATCOLL.Scripts.Python is
             if Func /= null and then PyCallable_Check (Func) then
                Setup_Return_Value (Args);
                Result := Execute_Command (Script, Func, Args, Errors'Access);
+               Py_DECREF (Func);
 
                if Errors then
                   Py_XDECREF (Result);
