@@ -2336,6 +2336,8 @@ package body GNATCOLL.Scripts.Python is
       for N in Params'Range loop
          --  Do we have a corresponding keyword parameter ?
          Item := PyDict_GetItemString (Data.Kw, Params (N).Name.all);
+         --  Item is a burrowed reference => need manual increase
+         Py_XINCREF (Item);
 
          if Item /= null then
             Nkeywords := Nkeywords - 1;
@@ -2350,12 +2352,13 @@ package body GNATCOLL.Scripts.Python is
                raise Invalid_Parameter;
             end if;
          elsif N - Params'First + First < Nargs then
+            --  Get_Item is already incrementing the refcount
             Item := PyObject_GetItem (Old_Args, N - Params'First + First);
 
          else
             Item := Py_None;
+            Py_INCREF (Item);
          end if;
-         Py_INCREF (Item);
          PyTuple_SetItem (Data.Args, N - Params'First + First, Item);
       end loop;
 
