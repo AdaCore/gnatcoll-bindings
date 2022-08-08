@@ -70,8 +70,11 @@ library project GnatColl_OMP is
               ("-O3", "-fopenmp", "-Wunreachable-code", "-fexceptions");
       end case;
 
+      Adaflags := External_As_List ("ADAFLAGS", " ");
       for Switches ("Ada") use Compiler'Switches ("Ada")
-        & External_As_List ("ADAFLAGS", " ");
+        & Adaflags;
+      for Switches ("a-cvgpso.adb") use Compiler'Switches ("a-cvgpso.adb")
+        & Adaflags;
       for Switches ("C") use Compiler'Switches ("C")
         & External_As_List ("CFLAGS", " ")
         & External_As_List ("CPPFLAGS", " ");
