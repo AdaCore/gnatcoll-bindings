@@ -21,6 +21,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GNATCOLL.GMP.Integers.Misc; use GNATCOLL.GMP.Integers.Misc;
+
 with Interfaces.C.Strings;
 
 package body GNATCOLL.GMP.Rational_Numbers is
@@ -281,6 +283,41 @@ package body GNATCOLL.GMP.Rational_Numbers is
          mpq_abs (Result.Value'Access, Left.Value'Access);
       end return;
    end "abs";
+
+   ----------
+   -- "**" --
+   ----------
+
+   function "**" (Left : Rational; Right : Big_Integer) return Rational is
+      R : constant Unsigned_Long := Unsigned_Long (abs As_Signed_Long (Right));
+   begin
+      Operand_Precondition (Left, "Left");
+
+      if not Fits_Signed_Long (Right) then
+         raise Failure
+           with "Exponent too big, exponentiation won't fit in memory";
+      end if;
+
+      return Result : Rational do
+         if Right = 0 then
+            Result.Set (1);
+         else
+            if Right < 0 then
+               --  1/Left ** -Right
+
+               Result.Set_Num (Left.Denominator ** (R));
+               Result.Set_Den (Left.Numerator ** (R));
+            else
+               --  Left ** Right
+
+               Result.Set_Num (Left.Numerator ** R);
+               Result.Set_Den (Left.Denominator ** R);
+            end if;
+
+            Result.Canonicalize;
+         end if;
+      end return;
+   end "**";
 
    -------
    -- = --

@@ -130,6 +130,7 @@ package GNATCOLL.GMP.Rational_Numbers is
    function "/" (Left, Right : Rational) return Rational;
    function "-" (Left : Rational) return Rational;
    function "abs" (Left : Rational) return Rational;
+   function "**" (Left : Rational; Right : Big_Integer) return Rational;
 
    --  Comparisons
 

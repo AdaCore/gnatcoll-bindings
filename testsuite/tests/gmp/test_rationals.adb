@@ -294,6 +294,7 @@ procedure Test_Rationals is
 
    procedure Test_Arithmetics is
       R, A, B, C : Rational;
+      I          : Big_Integer;
    begin
       A.Set ("1/10");
 
@@ -334,6 +335,12 @@ procedure Test_Rationals is
       R.Set (A + B - A * B / (-A));
       Assert (R.Image, "201/10");
 
+      I.Set (8);
+      R.Set (B ** I);
+      Assert (R.Image, "100000000");
+      R.Set (B ** (-I));
+      Assert (R.Image, "1/100000000");
+
       --  Division by zero raises a Failure exception
 
       declare
@@ -356,12 +363,21 @@ procedure Test_Rationals is
       declare
          type Binary_Operator is access
            function (Left, Right : Rational) return Rational;
+         type Binary_Mixed_Operator is access
+           function (Left: Rational; Right : Big_Integer) return Rational;
          type Unary_Operator is access
            function (Operand : Rational) return Rational;
 
          procedure Test_Binary
            (Op               : Binary_Operator;
             Left, Right      : Rational;
+            Expected_Message : String);
+         --  Test an expected failure of a binary operation
+
+         procedure Test_Binary
+           (Op               : Binary_Mixed_Operator;
+            Left             : Rational;
+            Right            : Big_Integer;
             Expected_Message : String);
          --  Test an expected failure of a binary operation
 
@@ -378,6 +394,27 @@ procedure Test_Rationals is
          procedure Test_Binary
            (Op               : Binary_Operator;
             Left, Right      : Rational;
+            Expected_Message : String)
+         is
+            Result : Rational;
+         begin
+            begin
+               Result.Set (Op (Left, Right));
+               Assert (False, "Should raise a Failure exception");
+            exception
+               when E : Rational_Numbers.Failure =>
+                  Assert (Exception_Message (E), Expected_Message);
+            end;
+         end Test_Binary;
+
+         -----------------
+         -- Test_Binary --
+         -----------------
+
+         procedure Test_Binary
+           (Op               : Binary_Mixed_Operator;
+            Left             : Rational;
+            Right            : Big_Integer;
             Expected_Message : String)
          is
             Result : Rational;
@@ -412,9 +449,11 @@ procedure Test_Rationals is
          end Test_Unary;
 
          A, B : Rational;
+         C    : Big_Integer;
       begin
          A.Set ("2/2", Canonicalize => False);
          B.Set ("1/2");
+         C.Set (Long_Integer'Last'Image);
 
          Test_Binary ("+"'Access, A, B, "Left operand must be canonicalized");
          Test_Binary ("-"'Access, A, B, "Left operand must be canonicalized");
@@ -428,6 +467,12 @@ procedure Test_Rationals is
 
          Test_Unary ("-"'Access, A, "operand must be canonicalized");
          Test_Unary ("abs"'Access, A, "operand must be canonicalized");
+
+         Test_Binary ("**"'Access, A, C, "Left operand must be canonicalized");
+
+         C.Set (C * C);
+         Test_Binary ("**"'Access, B, C,
+                      "Exponent too big, exponentiation won't fit in memory");
       end;
 
 end Test_Arithmetics;
