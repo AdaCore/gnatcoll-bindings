@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 --                          G N A T C O L L                                 --
 --                                                                          --
---                     Copyright (C) 2003-2021, AdaCore                     --
+--                     Copyright (C) 2003-2022, AdaCore                     --
 --                                                                          --
 -- This is free software;  you can redistribute it  and/or modify it  under --
 -- terms of the  GNU General Public License as published  by the Free Soft- --
@@ -64,12 +64,11 @@ ada_Py_InitModule4
    struct PyModuleDef* module = (struct PyModuleDef*)
          malloc(sizeof(struct PyModuleDef));
    PyObject* mod;
-   PyObject* imported;
 
    memcpy(module, &def, sizeof(struct PyModuleDef));
    mod = PyModule_Create(module);
 
-   return imported;
+   return mod;
 }
 
 // The definition of the module the user is creating via GNATCOLL.
