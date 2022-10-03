@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2003-2021, AdaCore                     --
+--                     Copyright (C) 2003-2022, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -44,6 +44,13 @@ package GNATCOLL.Scripts.Python is
    --
    --  If Python_Home is non-empty, it will be used as home, and libraries will
    --  be searched for in <Python_Home>/lib/python<version>
+
+   function Register_Python_Module_Scripting
+     (Repo   : access Scripts.Scripts_Repository_Record'Class;
+      Module : String) return GNATCOLL.Python.PyObject;
+   --  Create Python module with given name and return created object. It
+   --  is intended to be used to export Python modules, and not by ordinary
+   --  applications.
 
    procedure Unregister_Python_Scripting
      (Repo : access Scripts.Scripts_Repository_Record'Class);

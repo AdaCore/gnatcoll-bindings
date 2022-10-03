@@ -536,6 +536,30 @@ package body GNATCOLL.Scripts.Python is
       return Raw_String;
    end Command_Line_Treatment;
 
+   --------------------------------------
+   -- Register_Python_Module_Scripting --
+   --------------------------------------
+
+   function Register_Python_Module_Scripting
+     (Repo   : access Scripts.Scripts_Repository_Record'Class;
+      Module : String) return GNATCOLL.Python.PyObject
+   is
+      Script : Python_Scripting;
+
+   begin
+      return Result : constant GNATCOLL.Python.PyObject :=
+        Py_InitModule (Module & ASCII.NUL)
+      do
+         Script := new Python_Scripting_Record;
+         Script.Repo := Scripts_Repository (Repo);
+         Repo.Register_Scripting_Language (Script);
+
+         Finalized := False;
+
+         Script.Module := Result;
+      end return;
+   end Register_Python_Module_Scripting;
+
    -------------------------------
    -- Register_Python_Scripting --
    -------------------------------
