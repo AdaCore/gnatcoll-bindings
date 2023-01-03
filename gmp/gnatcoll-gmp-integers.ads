@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2009-2022, AdaCore                     --
+--                     Copyright (C) 2009-2023, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -242,6 +242,20 @@ package GNATCOLL.GMP.Integers is
 
    pragma Inline ("rem");
    pragma Inline (Get_Rem);
+
+   --  Logical and Bit Manipulation
+
+   function "and" (Left, Right : Big_Integer) return Big_Integer;
+   pragma Inline ("and");
+
+   function "or" (Left, Right : Big_Integer) return Big_Integer;
+   pragma Inline ("or");
+
+   function "xor" (Left, Right : Big_Integer) return Big_Integer;
+   pragma Inline ("xor");
+
+   function "not" (This : Big_Integer) return Big_Integer;
+   pragma Inline ("not");
 
    --  Highest Precedence Operators
 

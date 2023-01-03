@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2009-2022, AdaCore                     --
+--                     Copyright (C) 2009-2023, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -191,6 +191,20 @@ package GNATCOLL.GMP.Lib is
    procedure mpz_mod (R : access mpz_t;  N, D : access constant mpz_t);
    pragma Import (C, mpz_mod, "__gmpz_mod");
    --  result is always non-negative
+
+   --  Logical and Bit Manipulation
+
+   procedure mpz_and (Rop : access mpz_t;  Op1, Op2 : access constant mpz_t);
+   pragma Import (C, mpz_and, "__gmpz_and");
+
+   procedure mpz_ior (Rop : access mpz_t;  Op1, Op2 : access constant mpz_t);
+   pragma Import (C, mpz_ior, "__gmpz_ior");
+
+   procedure mpz_xor (Rop : access mpz_t;  Op1, Op2 : access constant mpz_t);
+   pragma Import (C, mpz_xor, "__gmpz_xor");
+
+   procedure mpz_com (Rop : access mpz_t;  Op : access constant mpz_t);
+   pragma Import (C, mpz_com, "__gmpz_com");
 
    --  Exponentiation
 

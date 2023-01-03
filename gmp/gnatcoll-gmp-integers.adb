@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --                             G N A T C O L L                              --
 --                                                                          --
---                     Copyright (C) 2009-2022, AdaCore                     --
+--                     Copyright (C) 2009-2023, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -611,6 +611,59 @@ package body GNATCOLL.GMP.Integers is
       mpz_tdiv_r (Result.Value'Access, N.Value'Access, D.Value'Access);
       --  the result takes the sign of N, as required by the RM
    end Get_Rem;
+
+   -----------
+   -- "and" --
+   -----------
+
+   function "and" (Left, Right : Big_Integer) return Big_Integer is
+   begin
+      return Result : Big_Integer do
+         mpz_and
+           (Rop => Result.Value'Access,
+            Op1 => Left.Value'Access,
+            Op2 => Right.Value'Access);
+      end return;
+   end "and";
+
+   ----------
+   -- "or" --
+   ----------
+
+   function "or" (Left, Right : Big_Integer) return Big_Integer is
+   begin
+      return Result : Big_Integer do
+         mpz_ior
+           (Rop => Result.Value'Access,
+            Op1 => Left.Value'Access,
+            Op2 => Right.Value'Access);
+      end return;
+   end "or";
+
+   -----------
+   -- "xor" --
+   -----------
+
+   function "xor" (Left, Right : Big_Integer) return Big_Integer is
+   begin
+      return Result : Big_Integer do
+         mpz_xor
+           (Rop => Result.Value'Access,
+            Op1 => Left.Value'Access,
+            Op2 => Right.Value'Access);
+      end return;
+   end "xor";
+
+   -----------
+   -- "not" --
+   -----------
+
+   function "not" (This : Big_Integer) return Big_Integer is
+   begin
+      return Result : Big_Integer do
+         mpz_com (Rop => Result.Value'Access, Op => This.Value'Access);
+      end return;
+   end "not";
 
    ---------
    -- "-" --
