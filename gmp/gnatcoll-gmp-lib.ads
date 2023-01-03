@@ -192,6 +192,18 @@ package GNATCOLL.GMP.Lib is
    pragma Import (C, mpz_mod, "__gmpz_mod");
    --  result is always non-negative
 
+   procedure mpz_fdiv_q (Q : access mpz_t;  N, D : access constant mpz_t);
+   pragma Import (C, mpz_fdiv_q, "__gmpz_fdiv_q");
+
+   procedure mpz_cdiv_q (Q : access mpz_t;  N, D : access constant mpz_t);
+   pragma Import (C, mpz_cdiv_q, "__gmpz_cdiv_q");
+
+   procedure mpz_fdiv_r (Q : access mpz_t;  N, D : access constant mpz_t);
+   pragma Import (C, mpz_fdiv_r, "__gmpz_fdiv_r");
+
+   procedure mpz_cdiv_r (Q : access mpz_t;  N, D : access constant mpz_t);
+   pragma Import (C, mpz_cdiv_r, "__gmpz_cdiv_r");
+
    --  Logical and Bit Manipulation
 
    procedure mpz_and (Rop : access mpz_t;  Op1, Op2 : access constant mpz_t);

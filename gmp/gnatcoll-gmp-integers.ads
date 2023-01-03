@@ -205,6 +205,10 @@ package GNATCOLL.GMP.Integers is
 
    --  Division
 
+   --  The Divide, "/" and "rem" subprograms below implement the "truncate"
+   --  division. See the other functions after them for the "ceil" and
+   --  "truncate" division.
+
    procedure Divide (Q : in out Big_Integer;
                      N : Big_Integer;
                      D : Unsigned_Long);
@@ -242,6 +246,22 @@ package GNATCOLL.GMP.Integers is
 
    pragma Inline ("rem");
    pragma Inline (Get_Rem);
+
+   function Truncate_Divide
+     (N, D : Big_Integer) return Big_Integer renames "/";
+   function Truncate_Remainder
+     (N, D : Big_Integer) return Big_Integer renames "rem";
+
+   function Floor_Divide (N, D : Big_Integer) return Big_Integer;
+   function Floor_Remainder (N, D : Big_Integer) return Big_Integer;
+
+   function Ceil_Divide (N, D : Big_Integer) return Big_Integer;
+   function Ceil_Remainder (N, D : Big_Integer) return Big_Integer;
+
+   pragma Inline (Floor_Divide);
+   pragma Inline (Floor_Remainder);
+   pragma Inline (Ceil_Divide);
+   pragma Inline (Ceil_Remainder);
 
    --  Logical and Bit Manipulation
 

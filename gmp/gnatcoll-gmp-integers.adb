@@ -612,6 +612,62 @@ package body GNATCOLL.GMP.Integers is
       --  the result takes the sign of N, as required by the RM
    end Get_Rem;
 
+   ------------------
+   -- Floor_Divide --
+   ------------------
+
+   function Floor_Divide (N, D : Big_Integer) return Big_Integer is
+   begin
+      if mpz_cmp_ui (D.Value'Access, 0) = 0 then
+         raise Constraint_Error;
+      end if;
+      return Result : Big_Integer do
+         mpz_fdiv_q (Result.Value'Access, N.Value'Access, D.Value'Access);
+      end return;
+   end Floor_Divide;
+
+   -----------------
+   -- Ceil_Divide --
+   -----------------
+
+   function Ceil_Divide (N, D : Big_Integer) return Big_Integer is
+   begin
+      if mpz_cmp_ui (D.Value'Access, 0) = 0 then
+         raise Constraint_Error;
+      end if;
+      return Result : Big_Integer do
+         mpz_cdiv_q (Result.Value'Access, N.Value'Access, D.Value'Access);
+      end return;
+   end Ceil_Divide;
+
+   ---------------------
+   -- Floor_Remainder --
+   ---------------------
+
+   function Floor_Remainder (N, D : Big_Integer) return Big_Integer is
+   begin
+      if mpz_cmp_ui (D.Value'Access, 0) = 0 then
+         raise Constraint_Error;
+      end if;
+      return Result : Big_Integer do
+         mpz_fdiv_r (Result.Value'Access, N.Value'Access, D.Value'Access);
+      end return;
+   end Floor_Remainder;
+
+   --------------------
+   -- Ceil_Remainder --
+   --------------------
+
+   function Ceil_Remainder (N, D : Big_Integer) return Big_Integer is
+   begin
+      if mpz_cmp_ui (D.Value'Access, 0) = 0 then
+         raise Constraint_Error;
+      end if;
+      return Result : Big_Integer do
+         mpz_cdiv_r (Result.Value'Access, N.Value'Access, D.Value'Access);
+      end return;
+   end Ceil_Remainder;
+
    -----------
    -- "and" --
    -----------
