@@ -813,13 +813,21 @@ PyAPI_FUNC(PyObject *) PyFile_FromString
 PyCodeObject*
 ada_pyframe_get_code (PyFrameObject* obj)
 {
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION > 8)
+   return PyFrame_GetCode(obj);
+#else
    return obj->f_code;
+#endif
 }
 
 PyFrameObject*
 ada_pyframe_get_back (PyFrameObject* obj)
 {
+#if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION > 8)
+   return PyFrame_GetBack(obj);
+#else
    return obj->f_back;
+#endif
 }
 
 PyObject*
