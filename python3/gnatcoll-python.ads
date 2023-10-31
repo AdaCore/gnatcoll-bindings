@@ -1072,7 +1072,9 @@ package GNATCOLL.Python is
 
    function PyFrame_Get_Code (Frame : PyFrameObject) return PyCodeObject;
    --  Return code object associated with the frame.
-   --  Returns a borrowed reference, no need to Py_DECREF
+   --  With Python prior from 3.9 return a borrowed reference (no need to
+   --  Py_DECREF)
+   --  Starting with Python 3.9 creates a new reference to the code object.
 
    function PyCode_Get_Filename (Code : PyCodeObject) return PyObject;
    --  Return file name of the code object.
@@ -1084,7 +1086,9 @@ package GNATCOLL.Python is
 
    function PyFrame_Get_Back (Frame : PyFrameObject) return PyFrameObject;
    --  Return previous frame in stack.
-   --  Returns a borrowed reference, no need to Py_DECREF
+   --  With Python prior from 3.9 return a borrowed reference (no need to
+   --  Py_DECREF)
+   --  Starting with Python 3.9 creates a new reference to the frame object.
 
    -------------
    -- Threads --
