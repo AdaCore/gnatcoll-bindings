@@ -2,6 +2,9 @@
 #
 # GNATcoll Bindings - Iconv documentation build configuration file
 
+# Load the base setup
+exec(open('../../docs-common/common_conf.py').read())
+
 # General information about the project.
 project = u'GNATcoll Bindings - Iconv'
 
@@ -25,5 +28,3 @@ man_pages = [
 
 # Bibliographic Dublin Core info.
 epub_title = u'GNATcoll Bindings - Iconv'
-
-exec(open('../../docs-common/common_conf.py').read())
