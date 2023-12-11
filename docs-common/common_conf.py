@@ -47,7 +47,7 @@ def get_copyright():
 
 
 # General information about the project.
-project = u'GNATcoll Bindings - Iconv'
+project = u'GNATcoll Bindings'
 copyright = get_copyright()
 
 
