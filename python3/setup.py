@@ -209,21 +209,43 @@ class GNATCollPython(SetupApp):
     def install(self, args):
         config = Config()
         has_static_python = "GNATCOLL_PYTHON_STATIC_LIB" in config.data["gprbuild"]
-        if has_static_python:
+
+        if not has_static_python:
+            super(GNATCollPython, self).install(args)
+        else:
             python_la = config.data["gprbuild"]["GNATCOLL_PYTHON_STATIC_LIB"]
-            prefix = config.data["prefix"]
-            target = os.path.join(
+            prefix = args.prefix
+            if prefix is None:
+                prefix = config.data["prefix"]
+            rel_target = os.path.join(
                 "..", "..", "lib", "gnatcoll_python.static", os.path.basename(python_la)
             )
-            config.set_data("GNATCOLL_PYTHON_STATIC_LIB", target, sub="gprbuild")
-            config.save_data()
-        super(GNATCollPython, self).install(args)
-
-        if has_static_python:
-            # Copy over the libpython*.la
-            shutil.copy(
-                python_la, os.path.join(prefix, "lib", "gnatcoll_python.static")
+            abs_target = os.path.join(
+                prefix, "lib", "gnatcoll_python.static", os.path.basename(python_la)
             )
+
+            shutil.copy(config.json_cache, config.json_cache + ".backup")
+            try:
+                # Temporary change the configuration to set a relative path to the
+                # static Python library.
+                config.set_data(
+                    "GNATCOLL_PYTHON_STATIC_LIB", rel_target, sub="gprbuild"
+                )
+                config.save_data()
+
+                # Perform the installation
+                super(GNATCollPython, self).install(args)
+
+                # Copy over the libpython*.a
+                logging.info("Copy static libpython into target lib")
+                if not os.path.isdir(os.path.dirname(abs_target)):
+                    os.mkdir(abs_target)
+                result = shutil.copy(python_la, abs_target)
+                logging.info(f"Python static lib in {result}")
+            finally:
+                # Restore the configuration cache
+                shutil.copy(config.json_cache + ".backup", config.json_cache)
+                os.unlink(config.json_cache + ".backup")
 
 
 if __name__ == "__main__":
