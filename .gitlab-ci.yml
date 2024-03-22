@@ -1,0 +1,66 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: never
+
+stages:
+  - build
+
+default:
+  before_script: |
+    echo "before script executing..."
+
+    #######################
+    ## colored execution ##
+    #######################
+
+    exec() {
+       # dark green + $ + command line + grey
+       echo -e "\e[0;32m\$ $@\e[0;37m"
+       $@
+       # save the result
+       res=$?
+       # back to normal output
+       echo -e -n "\e[0m"
+       # make sure we translate the exit code
+       return $res
+    }
+
+    # Enable generic CI for building with Anod
+
+    cmd="generic_anod_ci"
+
+    # generic anod ci requires --continuous-builder-mode when not run in a
+    # MR context
+    if [[ $CI_PIPELINE_SOURCE != "merge_request_event" ]]; then
+      cmd="$cmd --continuous-builder-mode"
+    fi
+
+    exec eval $cmd
+    echo "sourcing the generic CI environment"
+    . /tmp/ci_env.sh
+
+    # generic_anod_ci modifies the rebuild strategy of anod.
+    # Set it back to full, so we do not rebuild the packages depending
+    # on gnatcoll-core and contained in GNAT.
+    exec anod tune --full
+    exec anod vcs --list
+
+########
+# JOBS #
+########
+
+build:
+  services:
+    - image:e3
+    - cpu:2
+  stage: build
+  script:
+    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
+    - anod build --latest gnatcoll-bindings
+
