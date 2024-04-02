@@ -9,13 +9,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from setup_support import SetupApp, Config
 
 PYTHON_DATA_SCRIPT = """
-from distutils.sysconfig import (get_config_var, get_python_inc,
-                                 get_config_vars, PREFIX)
+from sysconfig import (get_config_var, get_path, get_config_vars)
 import json
 result = {'config_vars': get_config_vars(),
-          'python_inc': get_python_inc(),
-          'python_inc_plat': get_python_inc(plat_specific=True),
-          'prefix': PREFIX}
+          'python_inc': get_path ("include"),
+          'python_inc_plat': get_path ("platinclude"),
+          'prefix': get_config_var("prefix")}
 print(json.dumps(result))
 """
 
