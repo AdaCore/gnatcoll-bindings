@@ -62,5 +62,12 @@ build:
   stage: build
   script:
     - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
-    - anod build --latest gnatcoll-bindings
+    - anod build --latest gnatcoll-bindings -Qpython=3.9
+    - anod build --latest gnatcoll-bindings -Qpython=3.10
+    - anod build --latest gnatcoll-bindings -Qpython=3.11
+    - anod build --latest gnatcoll-bindings -Qpython=3.12
+    - eval `anod printenv gnatcoll-bindings -Qpython=3.12 --build-env`
+    - export GPR_PROJECT_PATH=`pwd`/x86_64-linux/gnatcoll-bindings_py-3.12/install/share/gpr:$GPR_PROHECT_PATH
+    - export ADA_PYTHON_HOME=`pwd`/x86_64-linux/tp-python_3.12/install
+    - cd $CI_PROJECT_DIR/python3/tests && ./testsuite.py
 
