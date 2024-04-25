@@ -55,7 +55,7 @@ default:
 # JOBS #
 ########
 
-build:
+build_and_test_py39:
   services:
     - image:e3
     - cpu:2
@@ -63,11 +63,48 @@ build:
   script:
     - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
     - anod build --latest gnatcoll-bindings -Qpython=3.9
+    - eval `anod printenv gnatcoll-bindings -Qpython=3.9 --build-env`
+    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/gnatcoll-bindings-py3/install/share/gpr:$GPR_PROJECT_PATH
+    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python_3.9/install
+    - ls /tmp/it/wave/x86_64-linux/gnatcoll-bindings-py3/install/share/gpr || ls -R /tmp/it/wave/x86_64-linux/
+    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
+
+build_and_test_py310:
+  services:
+    - image:e3
+    - cpu:2
+  stage: build
+  script:
+    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
     - anod build --latest gnatcoll-bindings -Qpython=3.10
+    - eval `anod printenv gnatcoll-bindings -Qpython=3.10 --build-env`
+    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/gnatcoll-bindings_py-3.10/install/share/gpr:$GPR_PROJECT_PATH
+    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python_3.10/install
+    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
+
+build_and_test_py311:
+  services:
+    - image:e3
+    - cpu:2
+  stage: build
+  script:
+    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
     - anod build --latest gnatcoll-bindings -Qpython=3.11
+    - eval `anod printenv gnatcoll-bindings -Qpython=3.11 --build-env`
+    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/gnatcoll-bindings_py-3.11/install/share/gpr:$GPR_PROJECT_PATH
+    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python/install
+    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
+
+build_and_test_py312:
+  services:
+    - image:e3
+    - cpu:2
+  stage: build
+  script:
+    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
     - anod build --latest gnatcoll-bindings -Qpython=3.12
     - eval `anod printenv gnatcoll-bindings -Qpython=3.12 --build-env`
-    - export GPR_PROJECT_PATH=`pwd`/x86_64-linux/gnatcoll-bindings_py-3.12/install/share/gpr:$GPR_PROHECT_PATH
-    - export ADA_PYTHON_HOME=`pwd`/x86_64-linux/tp-python_3.12/install
-    - cd $CI_PROJECT_DIR/python3/tests && ./testsuite.py
+    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/gnatcoll-bindings_py-3.12/install/share/gpr:$GPR_PROJECT_PATH
+    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python_3.12/install
+    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
 
