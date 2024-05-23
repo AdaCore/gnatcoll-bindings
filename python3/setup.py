@@ -10,13 +10,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from setup_support import SetupApp, Config
 
 PYTHON_DATA_SCRIPT = """
-from distutils.sysconfig import (get_config_var, get_python_inc,
-                                 get_config_vars, PREFIX)
 import json
+from sysconfig import get_config_vars, get_path, get_path_names
+if "platinclude" in get_path_names():
+    plat_include_key = "platinclude"
+else:
+    plat_include_key = "include"
 result = {'config_vars': get_config_vars(),
-          'python_inc': get_python_inc(),
-          'python_inc_plat': get_python_inc(plat_specific=True),
-          'prefix': PREFIX}
+          'python_inc': get_path("include"),
+          'python_inc_plat': get_path(plat_include_key),
+          'prefix': get_path("data")}
 print(json.dumps(result))
 """
 
