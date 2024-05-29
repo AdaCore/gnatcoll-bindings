@@ -30,7 +30,7 @@
 #if _WIN32
 #ifdef HAVE_DECLSPEC_DLL
 #undef PyMODINIT_FUNC
-#define PyMODINIT_FUNC void
+#define PyMODINIT_FUNC PyObject*
 #endif
 #endif
 
