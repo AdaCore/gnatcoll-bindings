@@ -1,4 +1,4 @@
-with "gnatcoll";
+with "gnatcoll_core";
 with "gnatcoll_cpp";
 
 project Test is
