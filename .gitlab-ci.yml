@@ -45,10 +45,6 @@ default:
     echo "sourcing the generic CI environment"
     . /tmp/ci_env.sh
 
-    # generic_anod_ci modifies the rebuild strategy of anod.
-    # Set it back to full, so we do not rebuild the packages depending
-    # on gnatcoll-core and contained in GNAT.
-    exec anod tune --full
     exec anod vcs --list
 
 ########
