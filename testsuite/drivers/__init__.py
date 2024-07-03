@@ -24,6 +24,7 @@ PROJECT = {
     "lzma": "gnatcoll_lzma.gpr",
     "omp": "gnatcoll_omp.gpr",
     "zlib": "gnatcoll_zlib.gpr",
+    "cpp": "gnatcoll_cpp.gpr",
 }
 
 

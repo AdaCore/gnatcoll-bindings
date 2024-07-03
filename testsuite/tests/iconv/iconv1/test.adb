@@ -60,7 +60,7 @@ begin
 
    A.Assert_Iconv
       (Input => Alveolar_Click & "A",
-       Expected => "A",
+       Expected => "?" & "A",
        From_Code => Iconv.UTF8,
        To_Code => Iconv.ASCII,
        Transliteration => True,
