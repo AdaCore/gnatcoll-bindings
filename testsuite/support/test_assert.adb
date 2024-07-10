@@ -21,14 +21,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Exceptions;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
-with GNATCOLL.Iconv;
 
 package body Test_Assert is
    package IO renames Ada.Text_IO;
-   package Iconv renames GNATCOLL.Iconv;
 
    ------------
    -- Assert --
@@ -80,100 +76,6 @@ package body Test_Assert is
          end if;
       end if;
    end Assert;
-
-   ------------
-   -- Assert --
-   ------------
-
-   function Bytes_Image (Input : String) return String;
-   function Bytes_Image (Input : String) return String
-   is
-      Result : Ada.Strings.Unbounded.Unbounded_String;
-   begin
-      for C in Input'Range loop
-         Ada.Strings.Unbounded.Append (Result, Character'Pos (Input (C))'Img);
-      end loop;
-      return Ada.Strings.Unbounded.To_String (Result);
-   end Bytes_Image;
-
-   procedure Assert_Iconv
-      (Input           : String;
-       Expected        : String;
-       From_Code       : String;
-       To_Code         : String;
-       Transliteration : Boolean := False;
-       Ignore          : Boolean := False;
-       Msg             : String := "";
-       Location        : String := SI.Source_Location)
-   is
-   begin
-      declare
-         Result : constant String := Iconv.Iconv
-            (Input => Input,
-             To_Code => To_Code,
-             From_Code => From_Code,
-             Transliteration => Transliteration,
-             Ignore => Ignore);
-         Success : constant Boolean := Result = Expected;
-      begin
-         Assert (Success, Msg, Location);
-         if not Success then
-            IO.Put_Line ("iconv(" & Bytes_Image (Input) &
-                         ", to_code => " & To_Code &
-                         ", from_code => " & From_code &
-                         ", transliteration => " & Transliteration'Img &
-                         ", ignore => " & Ignore'Img);
-            IO.Put_Line ("- expect: " & Bytes_Image (Expected));
-
-            IO.Put_Line ("- got: " & Bytes_Image (Result));
-         end if;
-      end;
-   exception
-      when E : others =>
-         Assert (False, Msg, Location);
-         IO.Put_Line ("got exception: " & ASCII.LF &
-                      Ada.Exceptions.Exception_Information (E));
-   end Assert_Iconv;
-
-   procedure Assert_Invalid_Sequence
-      (Input           : String;
-       From_Code       : String;
-       To_Code         : String;
-       Transliteration : Boolean := False;
-       Ignore          : Boolean := False;
-       Msg             : String := "";
-       Location        : String := SI.Source_Location)
-   is
-   begin
-      declare
-         Result : constant String := Iconv.Iconv
-            (Input => Input,
-             To_Code => To_Code,
-             From_Code => From_Code,
-             Transliteration => Transliteration,
-             Ignore => Ignore);
-      begin
-         Assert (False, Msg, Location);
-         IO.Put_Line ("iconv(" & Input &
-                      ", to_code => " & To_Code &
-                      ", from_code => " & From_code &
-                      ", transliteration => " & Transliteration'Img &
-                      ", ignore => " & Ignore'Img);
-         IO.Put_Line ("- expect: Invalid_Sequence_Error ");
-         IO.Put ("- got: ");
-         for C in Result'Range loop
-            IO.Put (Character'Pos (Result (C))'Img);
-         end loop;
-         IO.New_Line;
-      end;
-   exception
-      when Iconv.Invalid_Sequence_Error =>
-         Assert (True, Msg, Location);
-      when E : others =>
-         Assert (False, Msg, Location);
-         IO.Put_Line ("got exception: " & ASCII.LF &
-                      Ada.Exceptions.Exception_Information (E));
-   end Assert_Invalid_Sequence;
 
    ------------
    -- Report --
