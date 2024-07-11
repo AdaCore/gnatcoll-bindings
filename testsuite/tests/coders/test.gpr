@@ -1,5 +1,4 @@
 with "gnatcoll_core";
-with "gnatcoll_iconv";
 with "gnatcoll_lzma";
 with "gnatcoll_zlib";
 

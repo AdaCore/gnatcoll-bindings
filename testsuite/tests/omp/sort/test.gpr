@@ -1,4 +1,3 @@
-with "gnatcoll_iconv";
 with "gnatcoll_omp";
 
 project Test is

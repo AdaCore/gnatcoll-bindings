@@ -46,29 +46,6 @@ package Test_Assert is
    --  If Left = Right then test case is considered PASSED, otherwise
    --  the test status is FAILED and Final_Status set to 1.
 
-   procedure Assert_Iconv
-      (Input           : String;
-       Expected        : String;
-       From_Code       : String;
-       To_Code         : String;
-       Transliteration : Boolean := False;
-       Ignore          : Boolean := False;
-       Msg             : String := "";
-       Location        : String := SI.Source_Location);
-   --  Transform Input using Iconv and expect Expected as a result
-   --  The other parameters are for GNATCOLL.Iconv.Iconv
-
-   procedure Assert_Invalid_Sequence
-      (Input           : String;
-       From_Code       : String;
-       To_Code         : String;
-       Transliteration : Boolean := False;
-       Ignore          : Boolean := False;
-       Msg             : String := "";
-       Location        : String := SI.Source_Location);
-   --  Assert that input sequence will be considered by Iconv as an invalid
-   --  sequence.
-
    function Report return Natural;
    --  Report should be called the following way at the end of a test
    --  program main function:

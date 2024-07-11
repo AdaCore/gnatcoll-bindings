@@ -45,70 +45,24 @@ default:
     echo "sourcing the generic CI environment"
     . /tmp/ci_env.sh
 
-    # generic_anod_ci modifies the rebuild strategy of anod.
-    # Set it back to full, so we do not rebuild the packages depending
-    # on gnatcoll-core and contained in GNAT.
-    exec anod tune --full
     exec anod vcs --list
 
 ########
 # JOBS #
 ########
 
-build_and_test_py39:
+build_and_test:
   services:
     - image:e3
     - cpu:2
   stage: build
+  interruptible: true
+  parallel:
+    matrix:
+      - PYTHON: ["3.9", "3.10", "3.11", "3.12"]
   script:
-    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
-    - anod build --latest gnatcoll-bindings -Qpython=3.9
-    - BS=`anod info build gnatcoll-bindings -Qpython=3.9 --show build_space`
-    - eval `anod printenv gnatcoll-bindings -Qpython=3.9 --build-env`
-    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/$BS/install/share/gpr:$GPR_PROJECT_PATH
-    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python_3.9/install
-    - ls /tmp/it/wave/x86_64-linux/$BS/install/share/gpr || ls -R /tmp/it/wave/x86_64-linux/
-    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
-
-build_and_test_py310:
-  services:
-    - image:e3
-    - cpu:2
-  stage: build
-  script:
-    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
-    - anod build --latest gnatcoll-bindings -Qpython=3.10
-    - BS=`anod info build gnatcoll-bindings -Qpython=3.10 --show build_space`
-    - eval `anod printenv gnatcoll-bindings -Qpython=3.10 --build-env`
-    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/$BS/install/share/gpr:$GPR_PROJECT_PATH
-    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python_3.10/install
-    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
-
-build_and_test_py311:
-  services:
-    - image:e3
-    - cpu:2
-  stage: build
-  script:
-    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
-    - anod build --latest gnatcoll-bindings -Qpython=3.11
-    - BS=`anod info build gnatcoll-bindings -Qpython=3.11 --show build_space`
-    - eval `anod printenv gnatcoll-bindings -Qpython=3.11 --build-env`
-    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/$BS/install/share/gpr:$GPR_PROJECT_PATH
-    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python/install
-    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
-
-build_and_test_py312:
-  services:
-    - image:e3
-    - cpu:2
-  stage: build
-  script:
-    - anod vcs --add-repo gnatcoll-bindings $CI_PROJECT_DIR
-    - anod build --latest gnatcoll-bindings -Qpython=3.12
-    - BS=`anod info build gnatcoll-bindings -Qpython=3.12 --show build_space`
-    - eval `anod printenv gnatcoll-bindings -Qpython=3.12 --build-env`
-    - export GPR_PROJECT_PATH=/tmp/it/wave/x86_64-linux/$BS/install/share/gpr:$GPR_PROJECT_PATH
-    - export ADA_PYTHON_HOME=/tmp/it/wave/x86_64-linux/tp-python_3.12/install
-    - cd $CI_PROJECT_DIR/python3/tests && /it/e3/bin/python ./testsuite.py -v
-
+    - anod test  --latest gnatcoll-bindings -Qpython=$PYTHON
+    - testsuite_reports
+  artifacts:
+    reports:
+      junit: xunit-*.xml
