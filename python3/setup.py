@@ -220,8 +220,19 @@ class GNATCollPython(SetupApp):
             prefix = args.prefix
             if prefix is None:
                 prefix = config.data["prefix"]
+
+            # <PROJECT_DIR> will be replaced by Project'Project_Dir after
+            # call to gprinstall. This ensure the installed project will
+            # keep some location relative to the project file and thus be
+            # moved around. (gprinstall by default replace Project'Project_Dir
+            # by the absolute path in which the project is originally installed
             rel_target = os.path.join(
-                "..", "..", "lib", "gnatcoll_python.static", os.path.basename(python_la)
+                "<PROJECT_DIR>",
+                "..",
+                "..",
+                "lib",
+                "gnatcoll_python.static",
+                os.path.basename(python_la),
             )
             abs_target = os.path.join(
                 prefix, "lib", "gnatcoll_python.static", os.path.basename(python_la)
@@ -238,6 +249,17 @@ class GNATCollPython(SetupApp):
 
                 # Perform the installation
                 super(GNATCollPython, self).install(args)
+
+                # Hack the installed project to replace PROJECT_DIR reference by Project'Project_Dir
+                with open(
+                    os.path.join(prefix, "share", "gpr", "gnatcoll_python.gpr")
+                ) as fd:
+                    content = fd.read()
+                content = content.replace('"<PROJECT_DIR>', "Project'Project_Dir & \"")
+                with open(
+                    os.path.join(prefix, "share", "gpr", "gnatcoll_python.gpr"), "w"
+                ) as fd:
+                    fd.write(content)
 
                 # Copy over the libpython*.a
                 logging.info("Copy static libpython into target lib")
