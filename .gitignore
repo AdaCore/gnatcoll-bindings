@@ -35,3 +35,4 @@ examples/library/obj
 out
 /testsuite/prod
 /testsuite/gcov
+/zstd/gnatcoll_zstd.json

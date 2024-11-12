@@ -1,0 +1,5 @@
+abstract project GNATCOLL_Zstd_Constants is
+    GNATCOLL_ZSTD_VERSION_DEFAULT := "0.0";
+    GNATCOLL_ZSTD_OS_DEFAULT := "unix";
+    GNATCOLL_ZSTD_BUILD_MODE_DEFAULT := "PROD";
+end GNATCOLL_Zstd_Constants;
