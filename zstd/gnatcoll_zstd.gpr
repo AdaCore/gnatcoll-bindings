@@ -1,0 +1,158 @@
+------------------------------------------------------------------------------
+--                             G N A T C O L L                              --
+--                                                                          --
+--                    Copyright (C) 2019-2020, AdaCore                      --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
+with "gnatcoll_core";
+with "config/gnatcoll_zstd_constants";
+
+library project GNATCOLL_Zstd is
+
+   --  Version handling is managed by the build script that use the VERSION
+   --  file as reference for the library version
+   --  (used only when building a shared library)
+   Version := External(
+      "GNATCOLL_ZSTD_VERSION",
+      GNATCOLL_ZSTD_Constants.GNATCOLL_ZSTD_VERSION_DEFAULT);
+
+   --  Get the current OS type. The value is used to compute the expected
+   --  shared library extension. The user can use this value to have system
+   --  specific configurations (for example in Naming package).
+   --  (used only when building a shared library)
+   type OS_Kind is ("windows", "unix", "osx");
+   OS : OS_Kind := External
+      ("GNATCOLL_ZSTD_OS",
+      GNATCOLL_Zstd_Constants.GNATCOLL_ZSTD_OS_DEFAULT);
+
+   --  Used to select a DEBUG or PROD build
+   type Build_Type is ("DEBUG", "PROD");
+   Build : Build_Type := External
+      ("GNATCOLL_ZSTD_BUILD_MODE",
+      External
+         ("BUILD",
+          GNATCOLL_Zstd_Constants.GNATCOLL_ZSTD_BUILD_MODE_DEFAULT));
+
+   --  Kind of library to be built
+   type Library_Types is ("relocatable", "static", "static-pic");
+   Library_Type : Library_Types := External ("LIBRARY_TYPE", "static");
+
+   for Source_Dirs     use ("src");
+   for Languages use ("Ada");
+
+   --  If the library is built out of tree, and is used by an external
+   --  afterwards, then GNATCOLL_ZSTD_OBJECT_ROOT can be used so
+   --  gnatcoll-zstd.gpr Object_Dir and Library_Dir point to
+   --  the correct directory.
+   Object_Root := external ("GNATCOLL_ZSTD_OBJECT_ROOT", "");
+
+   case OS is
+       when "windows" | "osx" =>
+          --  On MacOS and Windows all object are relocatable by default
+          --  thus the same object directory can be used
+          for Object_Dir use Object_Root & "obj/gnatcoll_zstd/all";
+       when "unix" =>
+          --  On Unix static-pic and relocatable shared the same objects
+          case Library_Type is
+             when "relocatable" | "static-pic" =>
+                for Object_Dir use Object_Root & "obj/gnatcoll_zstd/pic";
+             when "static" =>
+                for Object_Dir use Object_Root & "obj/gnatcoll_zstd/static";
+          end case;
+   end case;
+
+   for Library_Name use "gnatcoll_zstd";
+   for Library_Kind use Library_Type;
+   for Library_Dir
+        use Object_Root & "lib/gnatcoll_zstd/" & Project'Library_Kind;
+
+   package Ide is
+       for VCS_Kind use "Git";
+   end Ide;
+
+   So_Ext := "";
+   case OS is
+        when "windows" =>
+           So_Ext := ".dll";
+        when "osx" =>
+           So_Ext := ".dylib";
+        when others =>
+           So_Ext := ".so";
+   end case;
+
+   for Library_Version use "lib" & Project'Library_Name & So_Ext & "." & Version;
+
+   package Compiler is
+       case Build is
+          when "DEBUG" =>
+             for Switches ("Ada") use (
+                 --  Standard debugging flags (debug info and no optimisation)
+                 "-g", "-O0",
+                 --  Enable pragma Assert and Debug
+                 "-gnata",
+                 --  Turn on all the validity checks
+                 "-gnatVa",
+                 --  Write ali/tree file even if compile errors
+                 "-gnatQ",
+                 --  Enable default style checks
+                 "-gnaty",
+                 --  Add extra information in exception messages
+                 "-gnateE",
+                 --  Activate default warnings and mark all warnings as error
+                 "-gnatwae",
+                 --  Activate stack checking
+                 "-fstack-check");
+             for Switches ("C") use ("-g", "-O0", "-Wunreachable-code");
+
+          when "PROD" =>
+             --  Enable optimisation and inlining. Do not treat warnings as errors
+             for Switches ("Ada") use ("-O2", "-gnatn", "-gnatwa");
+             for Switches ("C") use ("-O2", "-Wunreachable-code");
+       end case;
+
+      for Switches ("Ada") use Compiler'Switches ("Ada")
+        & External_As_List ("ADAFLAGS", " ");
+   end Compiler;
+
+   package Binder is
+       case Build is
+          when "DEBUG" =>
+             --  For symbolic bactrace
+             for Switches ("Ada") use ("-E");
+          when "PROD" =>
+             null;
+       end case;
+   end Binder;
+
+   Link_Opt := "-lzstd";
+
+   case Library_Type is
+      when "relocatable" =>
+         for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
+         for Library_Options use (Link_Opt);
+      when others =>
+         null;
+   end case;
+
+   package Linker is
+      for Linker_Options use (Link_Opt);
+   end Linker;
+
+end GNATCOLL_Zstd;
