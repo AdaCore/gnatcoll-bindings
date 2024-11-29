@@ -21,7 +21,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gnatcoll_core";
+with "gnatcoll_minimal";
 
 library project GnatColl_LZMA is
 
@@ -47,7 +47,7 @@ library project GnatColl_LZMA is
 
    case Library_Type is
       when "relocatable" =>
-         for Library_Version use "lib" & Name & Gnatcoll_Core.So_Ext & "." & Version;
+         for Library_Version use "lib" & Name & Gnatcoll_Minimal.So_Ext & "." & Version;
          for Leading_Library_Options use External_As_List ("LDFLAGS", " ");
          for Library_Options use (Link_Opt);
       when others =>
