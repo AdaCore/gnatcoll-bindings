@@ -21,7 +21,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gnatcoll_core";
+with "gnatcoll_minimal";
 with "config/gnatcoll_zstd_constants";
 
 library project GNATCOLL_Zstd is
