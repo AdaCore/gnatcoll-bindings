@@ -1,5 +1,4 @@
 with GNATCOLL.Python.Lifecycle; use GNATCOLL.Python.Lifecycle;
-with GNATCOLL.Python; use GNATCOLL.Python;
 with Test_Assert;
 with Test_Common;
 
