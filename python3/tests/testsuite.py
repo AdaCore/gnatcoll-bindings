@@ -2,7 +2,7 @@
 from e3.testsuite import Testsuite
 from e3.testsuite.driver import TestDriver
 from e3.testsuite.result import TestStatus
-from e3.testsuite.process import check_call
+from e3.os.process import Run
 from e3.env import Env
 from e3.fs import mkdir, cp, ls
 import logging
@@ -44,30 +44,30 @@ class DefaultDriver(TestDriver):
         py_files = ls(os.path.join(self.test_source_dir, "*.py"))
         if py_files:
             cp(py_files, self.build_dir)
-        check_call(
-            self,
-            ["gprbuild", "-P", self.project_file, "--relocate-build-tree", "-p"],
+        r = Run(
+            cmds=["gprbuild", "-P", self.project_file, "--relocate-build-tree", "-p"],
             cwd=self.build_dir,
             timeout=300,
             env=env,
             ignore_environ=False,
         )
+        r.wait()
 
     def run(self, prev, slot):
         if self.result.status == TestStatus.ERROR:  # means that status was not set
             test_py = os.path.join(self.build_dir, "test.py")
             if os.path.isfile(test_py):
-                self.test_process = check_call(
-                    self, [sys.executable, "./test.py"], cwd=self.build_dir, timeout=60
+                self.test_process = Run(
+                    cmds=[sys.executable, "./test.py"], cwd=self.build_dir, timeout=60
                 )
             else:
-                self.test_process = check_call(
-                    self,
-                    [os.path.join(self.build_dir, "obj", "test")]
+                self.test_process = Run(
+                    cmds=[os.path.join(self.build_dir, "obj", "test")]
                     + self.test_env.get("test_args", []),
                     timeout=60,
                     cwd=self.build_dir,
                 )
+            self.test_process.wait()
 
     def analyze(self, prev, slot):
         if self.result.status == TestStatus.ERROR:  # means that status was not set

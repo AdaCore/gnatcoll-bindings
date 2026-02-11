@@ -19,6 +19,7 @@
  * we cannot use the mingwin python with gcc on Windows*/
 #define PY_LONG_LONG long long
 #include <Python.h>
+#include <object.h>
 #include <compile.h>  /* PyCodeObject definition in older versions*/
 #include <frameobject.h> /* PyFrameObject definition */
 #include <string.h>
@@ -198,11 +199,9 @@ ada_py_initialize_and_module(char* program_name, char* name) {
 typedef struct {
   PyDescr_COMMON;
   PyObject *cfunc; // An instance of PyCFunction, bound with the
-                   // data that Ada needs, in the form of a PyCapsule.
+                   // data that Ada needs, in the form of a PyCapsule
+  PyMethodDef *def;
 } PyAdaMethodDescrObject;
-
-PyTypeObject PyAdaMethodDescr_Type;
-int adamethod_descr_initialized = 0;
 
 static PyObject *adamethod_descr_call(PyAdaMethodDescrObject *descr,
                                       PyObject *arg, PyObject *kw) {
@@ -232,31 +231,72 @@ static PyObject * adamethod_descr_get
   return PyMethod_New (descr->cfunc, obj);
 }
 
+// Implementation of the __getattro__ descriptor method. Manually compute
+// attributes like __name__ and __qualname__ because cfunc/def are hidden
+// inside PyAdaMethodDescrObject.
+
+static PyObject *
+ada_descr_getattro(PyObject *self, PyObject *name)
+{
+  PyAdaMethodDescrObject *descr = (PyAdaMethodDescrObject *)self;
+  PyObject *descr_type = (PyObject *)PyDescr_TYPE(descr);
+
+    if (PyUnicode_Check(name)) {
+
+        if (PyUnicode_CompareWithASCIIString(name, "__name__") == 0) {
+            return PyUnicode_FromString(descr->def->ml_name);
+        }
+
+        if (PyUnicode_CompareWithASCIIString(name, "__qualname__") == 0) {
+            PyObject *type_qn =
+                PyObject_GetAttrString(
+                    descr_type,
+                    "__qualname__");
+
+            if (!type_qn)
+                return NULL;
+
+            PyObject *res = PyUnicode_FromFormat(
+                "%U.%s", type_qn, descr->def->ml_name);
+
+            Py_DECREF(type_qn);
+            return res;
+        }
+
+        if (PyUnicode_CompareWithASCIIString(name, "__objclass__") == 0) {
+            Py_INCREF(descr_type);
+            return descr_type;
+          }
+    }
+
+    return PyObject_GenericGetAttr(self, name);
+}
+
+static PyTypeObject PyAdaMethodDescr_Type = {
+  .ob_base = PyVarObject_HEAD_INIT (NULL, 0).tp_name = "ada_method_descriptor",
+  .tp_basicsize = sizeof (PyAdaMethodDescrObject),
+  .tp_descr_get = (descrgetfunc)adamethod_descr_get,
+  .tp_getattro = ada_descr_getattro,
+  .tp_call = (ternaryfunc)adamethod_descr_call,
+  .tp_flags = Py_TPFLAGS_DEFAULT && !(Py_TPFLAGS_HAVE_VECTORCALL),
+  .tp_vectorcall = NULL,
+  .tp_new = PyType_GenericNew,
+};
+
 // Creates a new AdaMethod instance. 'method' is the description of the Ada
 // function to call, and 'data' is a PyCapsule that is passed to Ada as 'self'.
 
 PyObject *
-PyDescr_NewAdaMethod(PyTypeObject *type, PyObject* cfunc, const char* name)
+PyDescr_NewAdaMethod (PyTypeObject *type, PyMethodDef *def, PyObject *cfunc,
+                      const char *name)
 {
-  if (!adamethod_descr_initialized) {
-    adamethod_descr_initialized = 1;
-    memcpy (&PyAdaMethodDescr_Type, &PyMethodDescr_Type, sizeof (PyTypeObject));
-    PyAdaMethodDescr_Type.tp_basicsize = sizeof(PyAdaMethodDescrObject);
-    // cfunc is hidden inside the new descriptor use tp_descr_get and tp_call
-    // to internally dispatch and call cfunc
-    PyAdaMethodDescr_Type.tp_descr_get = (descrgetfunc)adamethod_descr_get;
-    PyAdaMethodDescr_Type.tp_call = (ternaryfunc)adamethod_descr_call;
-    PyAdaMethodDescr_Type.tp_flags =
-        Py_TPFLAGS_DEFAULT && !(Py_TPFLAGS_HAVE_VECTORCALL);
-    PyAdaMethodDescr_Type.tp_vectorcall = NULL;
-  }
-
   PyAdaMethodDescrObject *descr = (PyAdaMethodDescrObject*) PyType_GenericAlloc
     (&PyAdaMethodDescr_Type, 0);
 
   if (descr != NULL) {
     Py_XINCREF(type);
-    PyDescr_TYPE(descr) = type;
+    PyDescr_TYPE (descr) = type;
+
     PyDescr_NAME(descr) = PyUnicode_InternFromString(name);
     if (PyDescr_NAME(descr) == NULL) {
       Py_DECREF(descr);
@@ -265,7 +305,8 @@ PyDescr_NewAdaMethod(PyTypeObject *type, PyObject* cfunc, const char* name)
   }
 
   if (descr != NULL) {
-    descr->cfunc = cfunc;
+      descr->cfunc = cfunc;
+      descr->def = def;
   }
 
   return (PyObject *)descr;
@@ -286,7 +327,7 @@ void ada_py_add_method
     (def, data, PyUnicode_FromString (PyModule_GetName (module)));
 
   PyObject* method = PyDescr_NewAdaMethod
-    ((PyTypeObject*)class, cfunc, def->ml_name);
+    ((PyTypeObject*)class, def, cfunc, def->ml_name);
 
   PyObject_SetAttrString (class, def->ml_name, method);
   Py_DECREF (method);
@@ -719,7 +760,7 @@ ada_pydescr_newGetSet (PyTypeObject* type,
   if (prop == NULL) {
     return 0;
   } else {
-    PyDict_SetItemString(type->tp_dict, name, prop);
+    PyDict_SetItemString (type->tp_dict, name, prop);
     Py_DECREF (prop);
     return 1;
   }

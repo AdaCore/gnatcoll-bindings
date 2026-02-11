@@ -1,0 +1,6 @@
+description: test __class__, __name and __qualname__
+goals: |
+    Verify that all types of python created by the bindings
+    have a proper class, a name and a qualname. This verifies that
+    python is able to compute the MRO for objects created via the
+    Ada bindings.

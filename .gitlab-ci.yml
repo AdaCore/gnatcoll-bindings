@@ -59,9 +59,9 @@ build_and_test:
   interruptible: true
   parallel:
     matrix:
-      - PYTHON: ["3.9", "3.10", "3.11", "3.12"]
+      - PYTHON: ["3.9", "3.10", "3.11", "3.12", "3.13"]
   script:
-    - anod test  --latest gnatcoll-bindings -Qpython=$PYTHON
+    - anod test  --latest gnatcoll-bindings-python3 -Qpython=$PYTHON
     - testsuite_reports
   artifacts:
     reports:
