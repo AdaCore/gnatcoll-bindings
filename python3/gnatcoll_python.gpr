@@ -34,6 +34,7 @@ library project GnatColl_Python is
 
    type Library_Type_Type is ("relocatable", "static", "static-pic");
    Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
+   for Run_Path_Option use ();
 
    Python_CFLAGS := External_As_List ("GNATCOLL_PYTHON_CFLAGS", " ");
    Python_Libs := External_As_List ("GNATCOLL_PYTHON_LIBS", " ");
