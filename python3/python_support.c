@@ -203,9 +203,22 @@ typedef struct {
   PyMethodDef *def;
 } PyAdaMethodDescrObject;
 
+static int adamethod_descr_type_ready = 0;
+
 static PyObject *adamethod_descr_call(PyAdaMethodDescrObject *descr,
                                       PyObject *arg, PyObject *kw) {
     return PyObject_Call((PyObject *)descr->cfunc, arg, kw);;
+}
+
+static void
+adamethod_descr_dealloc(PyObject *self)
+{
+  PyAdaMethodDescrObject *descr = (PyAdaMethodDescrObject *)self;
+
+  Py_XDECREF(descr->cfunc);
+  Py_XDECREF((PyObject *)PyDescr_TYPE(descr));
+  Py_XDECREF(PyDescr_NAME(descr));
+  Py_TYPE(self)->tp_free(self);
 }
 
 // Implementation of the __get__ descriptor method. The code is heavily
@@ -275,13 +288,28 @@ ada_descr_getattro(PyObject *self, PyObject *name)
 static PyTypeObject PyAdaMethodDescr_Type = {
   .ob_base = PyVarObject_HEAD_INIT (NULL, 0).tp_name = "ada_method_descriptor",
   .tp_basicsize = sizeof (PyAdaMethodDescrObject),
+  .tp_dealloc = adamethod_descr_dealloc,
   .tp_descr_get = (descrgetfunc)adamethod_descr_get,
   .tp_getattro = ada_descr_getattro,
   .tp_call = (ternaryfunc)adamethod_descr_call,
-  .tp_flags = Py_TPFLAGS_DEFAULT && !(Py_TPFLAGS_HAVE_VECTORCALL),
+  .tp_flags = Py_TPFLAGS_DEFAULT,
   .tp_vectorcall = NULL,
   .tp_new = PyType_GenericNew,
 };
+
+static int
+ensure_adamethod_descr_type_ready(void)
+{
+  if (!adamethod_descr_type_ready) {
+    if (PyType_Ready(&PyAdaMethodDescr_Type) < 0) {
+      return 0;
+    }
+
+    adamethod_descr_type_ready = 1;
+  }
+
+  return 1;
+}
 
 // Creates a new AdaMethod instance. 'method' is the description of the Ada
 // function to call, and 'data' is a PyCapsule that is passed to Ada as 'self'.
@@ -290,6 +318,10 @@ PyObject *
 PyDescr_NewAdaMethod (PyTypeObject *type, PyMethodDef *def, PyObject *cfunc,
                       const char *name)
 {
+  if (!ensure_adamethod_descr_type_ready()) {
+    return NULL;
+  }
+
   PyAdaMethodDescrObject *descr = (PyAdaMethodDescrObject*) PyType_GenericAlloc
     (&PyAdaMethodDescr_Type, 0);
 
@@ -774,8 +806,24 @@ PyThreadState* ada_PyGILState_GetThisThreadState() {
 #endif
 }
 
+static int
+ada_python_can_use_gilstate(void)
+{
+  if (!Py_IsInitialized()) {
+    return 0;
+  }
+
+#if PY_VERSION_HEX >= 0x030D0000
+  if (Py_IsFinalizing()) {
+    return 0;
+  }
+#endif
+
+  return 1;
+}
+
 int ada_PyGILState_Ensure() {
-  if (Py_IsInitialized ()) {
+  if (ada_python_can_use_gilstate()) {
 #ifdef WITH_THREAD
     return (int)PyGILState_Ensure();
 #else
@@ -787,7 +835,7 @@ int ada_PyGILState_Ensure() {
 
 void ada_PyGILState_Release(PyGILState_STATE state) {
 #ifdef WITH_THREAD
-  if (Py_IsInitialized ()) {
+  if (ada_python_can_use_gilstate()) {
     PyGILState_Release((PyGILState_STATE)state);
   }
 #endif
@@ -857,6 +905,7 @@ ada_pyframe_get_code (PyFrameObject* obj)
 #if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION > 8)
    return PyFrame_GetCode(obj);
 #else
+  Py_XINCREF((PyObject *)obj->f_code);
    return obj->f_code;
 #endif
 }
@@ -867,6 +916,7 @@ ada_pyframe_get_back (PyFrameObject* obj)
 #if PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION > 8)
    return PyFrame_GetBack(obj);
 #else
+  Py_XINCREF((PyObject *)obj->f_back);
    return obj->f_back;
 #endif
 }

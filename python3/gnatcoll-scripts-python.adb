@@ -4827,8 +4827,12 @@ package body GNATCOLL.Scripts.Python is
 
    begin
       if F /= null then
+         Py_INCREF (PyObject (F));
+
          while F /= null loop
             declare
+               Code  : constant PyCodeObject := PyFrame_Get_Code (F);
+               Next  : constant PyFrameObject := PyFrame_Get_Back (F);
                Image : String :=
                  Integer'Image (PyFrame_GetLineNumber (F));
 
@@ -4838,12 +4842,14 @@ package body GNATCOLL.Scripts.Python is
                  (Aux,
                   "  "
                     & PyString_AsString
-                        (PyCode_Get_Filename (PyFrame_Get_Code (F)))
+                        (PyCode_Get_Filename (Code))
                     & Image
                     & ASCII.LF);
-            end;
 
-            F := PyFrame_Get_Back (F);
+               Py_XDECREF (PyObject (Code));
+               Py_DECREF (PyObject (F));
+               F := Next;
+            end;
          end loop;
       end if;
 
