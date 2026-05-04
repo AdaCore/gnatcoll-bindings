@@ -53,6 +53,7 @@ library project GNATCOLL_Zstd is
    --  Kind of library to be built
    type Library_Types is ("relocatable", "static", "static-pic");
    Library_Type : Library_Types := External ("LIBRARY_TYPE", "static");
+   for Run_Path_Option use ();
 
    for Source_Dirs     use ("src");
    for Languages use ("Ada");

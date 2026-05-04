@@ -34,6 +34,7 @@ library project GnatColl_OMP is
 
    type Library_Type_Type is ("relocatable", "static", "static-pic");
    Library_Type : Library_Type_Type := External ("LIBRARY_TYPE", "static");
+   for Run_Path_Option use ();
 
    for Source_Dirs     use (".");
    for Library_Kind    use Library_Type;
