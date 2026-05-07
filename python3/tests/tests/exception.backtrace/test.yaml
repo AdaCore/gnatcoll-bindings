@@ -1,0 +1,7 @@
+description: test Python_Backtrace from an Ada callback called by Python
+goals: |
+    Verify that Python_Backtrace returns correct file/line information when
+    called from inside an Ada callback that was invoked from nested Python
+    frames. This exercises the frame reference-counting fix: PyFrame_Get_Code
+    and PyFrame_Get_Back now always return a new reference, and the backtrace
+    walker must free those references correctly without crashing or leaking.

@@ -2,23 +2,20 @@ with GNATCOLL.Scripts;        use GNATCOLL.Scripts;
 with GNATCOLL.Scripts.Python; use GNATCOLL.Scripts.Python;
 with Test_Common;
 
-function Test return Integer
-is
+function Test return Integer is
    Repository : Scripts_Repository := null;
-   Python     : Python_Scripting   := null;
+   Python     : Python_Scripting := null;
    Errors     : Boolean;
 
    procedure My_Class_Handler
-     (Data    : in out Callback_Data'Class;
-      Command : String);
+     (Data : in out Callback_Data'Class; Command : String);
 
    ----------------------
    -- My_Class_Handler --
    ----------------------
 
    procedure My_Class_Handler
-     (Data    : in out Callback_Data'Class;
-      Command : String) is
+     (Data : in out Callback_Data'Class; Command : String) is
    begin
       if Command = "raise_error" then
          Set_Error_Msg (Data, "My_Error_Message");
@@ -28,12 +25,10 @@ begin
    Test_Common.Set_Python_Home;
 
    Repository := new Scripts_Repository_Record;
-   Register_Python_Scripting
-     (Repo        => Repository,
-      Module      => "Test");
-   Python := GNATCOLL.Scripts.Python.Python_Scripting
-     (GNATCOLL.Scripts.Lookup_Scripting_Language
-        (Repository, Python_Name));
+   Register_Python_Scripting (Repo => Repository, Module => "Test");
+   Python :=
+     GNATCOLL.Scripts.Python.Python_Scripting
+       (GNATCOLL.Scripts.Lookup_Scripting_Language (Repository, Python_Name));
 
    declare
       My_Class : constant Class_Type := Repository.New_Class ("My_Class");
@@ -46,9 +41,7 @@ begin
    end;
 
    Python.Execute_File
-     (Filename     => "my_test.py",
-      Show_Command => False,
-      Errors       => Errors);
+     (Filename => "my_test.py", Show_Command => False, Errors => Errors);
    Python.Destroy;
 
    return 0;

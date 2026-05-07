@@ -1,0 +1,8 @@
+description: test clean shutdown when Ada method descriptors exist
+goals: |
+    Verify that calling Python.Destroy (which triggers Py_Finalize) does not
+    crash when Ada method descriptors are registered. This exercises two fixes:
+    * The proper dealloc callback and PyType_Ready call for
+      PyAdaMethodDescr_Type (so the descriptor objects are freed cleanly).
+    * The ada_python_can_use_gilstate guard that prevents calling
+      PyGILState_Ensure/Release during Python 3.13 interpreter shutdown.
