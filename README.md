@@ -66,7 +66,6 @@ The following bindings are provided:
 - [iconv](iconv/README.md)
 - lzma
 - [omp](omp/README.md)
-- [python](python/README.md)
 - [python3](python3/README.md)
 - [readline](readline/README.md)
 - [syslog](syslog/README.md)
